@@ -4,6 +4,7 @@
 use std::convert::TryInto;
 
 use byteorder::{BigEndian, ByteOrder};
+#[cfg(feature = "rand")]
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -45,6 +46,7 @@ impl Nonce {
     }
 
     /// Generate new random nonce
+    #[cfg(feature = "rand")]
     pub fn random() -> Self {
         let mut value: [u16; NONCE_WORDS] = [0; NONCE_WORDS];
         rand::thread_rng().fill(&mut value);

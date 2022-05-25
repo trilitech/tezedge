@@ -1,9 +1,13 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
 // SPDX-License-Identifier: MIT
 
+use cryptoxide::hashing::sha256;
 use serde::{Deserialize, Serialize};
-use sodiumoxide::crypto::hash::sha256;
-use sodiumoxide::crypto::hash::sha256::Digest;
+
+#[cfg(feature = "no_sodium")]
+use cryptoxide::hashing::sha2::Sha256;
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
+use sodiumoxide::crypto::hash::sha256::{self, Digest};
 
 use crate::hash::{BlockHash, CryptoboxPublicKeyHash};
 
@@ -35,12 +39,26 @@ pub struct Step {
 }
 
 impl Step {
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     pub fn init(seed: &Seed, block_hash: &BlockHash) -> Step {
         let mut hash_state = sha256::State::new();
         hash_state.update(seed.sender_id.as_ref());
         hash_state.update(seed.receiver_id.as_ref());
         hash_state.update(block_hash.as_ref());
         let Digest(h) = hash_state.finalize();
+        Step {
+            step: 1,
+            counter: 9,
+            seed: h.to_vec(),
+        }
+    }
+    #[cfg(feature = "no_sodium")]
+    pub fn init(seed: &Seed, block_hash: &BlockHash) -> Step {
+        let mut hash_state = Sha256::new();
+        hash_state.update_mut(seed.sender_id.as_ref());
+        hash_state.update_mut(seed.receiver_id.as_ref());
+        hash_state.update_mut(block_hash.as_ref());
+        let h = hash_state.finalize();
         Step {
             step: 1,
             counter: 9,
@@ -65,7 +83,11 @@ impl Step {
             let random_gap = i32::from_be_bytes(seed_as_bytes) % n;
 
             // mutate new seed
+
+            #[cfg(all(feature = "std", not(feature = "no_sodium")))]
             let Digest(new_seed) = sha256::hash(&self.seed);
+            #[cfg(feature = "no_sodium")]
+            let new_seed = sha256(&self.seed);
             self.seed = new_seed.to_vec();
 
             // return random gap

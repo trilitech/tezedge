@@ -12,16 +12,24 @@
 //!
 //! CryptoboxPublicKeyHash - generated as a hash of [`PublicKey`], for example used as a peer_id
 
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::{self, Debug};
 
 use hex::{FromHex, FromHexError};
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 use sodiumoxide::crypto::box_;
+
+#[cfg(feature = "no_sodium")]
+use cryptoxide::x25519;
 
 use crate::{blake2b::Blake2bError, hash::FromBytesError, CryptoError};
 
-use super::{hash::CryptoboxPublicKeyHash, nonce::Nonce};
+use super::hash::CryptoboxPublicKeyHash;
+
+#[cfg(feature = "rand")]
+use super::nonce::Nonce;
 
 use thiserror::Error;
 
@@ -58,8 +66,11 @@ fn ensure_crypto_key_bytes<B: AsRef<[u8]>>(buf: B) -> Result<[u8; CRYPTO_KEY_SIZ
 }
 
 /// Convenience wrapper around [`sodiumoxide::crypto::box_::PublicKey`]
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct PublicKey(box_::PublicKey);
+#[cfg(feature = "no_sodium")]
+pub struct PublicKey(x25519::PublicKey);
 
 impl PublicKey {
     /// Generates public key hash for public key
@@ -71,12 +82,19 @@ impl PublicKey {
 
 impl CryptoKey for PublicKey {
     fn from_bytes<B: AsRef<[u8]>>(buf: B) -> Result<Self, CryptoError> {
-        ensure_crypto_key_bytes(buf).map(|key_bytes| PublicKey(box_::PublicKey(key_bytes)))
+        ensure_crypto_key_bytes(buf).map(|key_bytes| PublicKey(x25519::PublicKey::from(key_bytes)))
     }
 }
 
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 impl AsRef<box_::PublicKey> for PublicKey {
     fn as_ref(&self) -> &box_::PublicKey {
+        &self.0
+    }
+}
+#[cfg(feature = "no_sodium")]
+impl AsRef<x25519::PublicKey> for PublicKey {
+    fn as_ref(&self) -> &x25519::PublicKey {
         &self.0
     }
 }
@@ -91,16 +109,31 @@ impl FromHex for PublicKey {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 /// Convenience wrapper around [`sodiumoxide::crypto::box_::SecretKey`]
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 pub struct SecretKey(box_::SecretKey);
+#[cfg(feature = "no_sodium")]
+pub struct SecretKey(x25519::SecretKey);
 
 impl CryptoKey for SecretKey {
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     fn from_bytes<B: AsRef<[u8]>>(buf: B) -> Result<Self, CryptoError> {
         ensure_crypto_key_bytes(buf).map(|key_bytes| SecretKey(box_::SecretKey(key_bytes)))
     }
+    #[cfg(feature = "no_sodium")]
+    fn from_bytes<B: AsRef<[u8]>>(buf: B) -> Result<Self, CryptoError> {
+        ensure_crypto_key_bytes(buf).map(|key_bytes| SecretKey(x25519::SecretKey::from(key_bytes)))
+    }
 }
 
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 impl AsRef<box_::SecretKey> for SecretKey {
     fn as_ref(&self) -> &box_::SecretKey {
+        &self.0
+    }
+}
+#[cfg(feature = "no_sodium")]
+impl AsRef<x25519::SecretKey> for SecretKey {
+    fn as_ref(&self) -> &x25519::SecretKey {
         &self.0
     }
 }
@@ -116,6 +149,7 @@ impl FromHex for SecretKey {
 /// Generates random keypair: [`PublicKey, SecretKey`] + [`CryptoboxPublicKeyHash`]
 ///
 /// Note: Strange why it is called pair, bud returns triplet :)
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 pub fn random_keypair() -> Result<(SecretKey, PublicKey, CryptoboxPublicKeyHash), PublicKeyError> {
     // generate
     let (pk, sk) = box_::gen_keypair();
@@ -133,7 +167,10 @@ pub fn random_keypair() -> Result<(SecretKey, PublicKey, CryptoboxPublicKeyHash)
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone)]
 /// Convenience wrapper around [`sodiumoxide::crypto::box_::PrecomputedKey`]
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 pub struct PrecomputedKey(box_::PrecomputedKey);
+#[cfg(feature = "no_sodium")]
+pub struct PrecomputedKey(x25519::SharedSecret);
 
 #[cfg(feature = "fuzzing")]
 impl fuzzcheck::DefaultMutator for PrecomputedKey {
@@ -151,12 +188,22 @@ impl PrecomputedKey {
     /// # Arguments
     /// * `pk_as_hex_string` - Hex string representing public key
     /// * `sk_as_hex_string` - Hex string representing secret key
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     pub fn precompute(pk: &PublicKey, sk: &SecretKey) -> Self {
         Self(box_::precompute(pk.as_ref(), sk.as_ref()))
     }
+    #[cfg(feature = "no_sodium")]
+    pub fn precompute(pk: &PublicKey, sk: &SecretKey) -> Self {
+        Self(x25519::dh(sk.as_ref(), pk.as_ref()))
+    }
 
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     pub fn from_bytes(bytes: [u8; box_::PRECOMPUTEDKEYBYTES]) -> Self {
         Self(box_::PrecomputedKey(bytes))
+    }
+    #[cfg(feature = "no_sodium")]
+    pub fn from_bytes(bytes: [u8; 32]) -> Self {
+        Self(x25519::SharedSecret::from(bytes))
     }
 
     /// Encrypt binary message
@@ -165,6 +212,7 @@ impl PrecomputedKey {
     /// * `msg` - Binary message to be encoded
     /// * `nonce` - Nonce required to encode message
     /// * `pck` - Precomputed key required to encode message
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     pub fn encrypt(&self, msg: &[u8], nonce: &Nonce) -> Result<Vec<u8>, CryptoError> {
         let box_nonce = box_::Nonce(nonce.get_bytes()?);
         Ok(box_::seal_precomputed(msg, &box_nonce, &self.0))
@@ -176,8 +224,10 @@ impl PrecomputedKey {
     /// * `enc` - Encoded message
     /// * `nonce` - Nonce required to decode message
     /// * `pck` - Precomputed key required to decode message
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     pub fn decrypt(&self, enc: &[u8], nonce: &Nonce) -> Result<Vec<u8>, CryptoError> {
         let box_nonce = box_::Nonce(nonce.get_bytes()?);
+
         match box_::open_precomputed(enc, &box_nonce, &self.0) {
             Ok(msg) => Ok(msg),
             Err(()) => Err(CryptoError::FailedToDecrypt),
@@ -207,12 +257,14 @@ mod tests {
     use super::*;
     use crate::nonce::NONCE_SIZE;
 
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     #[test]
     fn generate_nonce_xsalsa20() {
         let nonce = box_::gen_nonce();
         assert_eq!(NONCE_SIZE, nonce.0.len())
     }
 
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     #[test]
     fn generate_precomputed_key() -> Result<(), anyhow::Error> {
         let pk = PublicKey::from_hex(
@@ -231,6 +283,7 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     #[test]
     fn encrypt_message() -> Result<(), anyhow::Error> {
         let pk = PublicKey::from_hex(
@@ -255,6 +308,7 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     #[test]
     fn decrypt_message() -> Result<(), anyhow::Error> {
         let pk = PublicKey::from_hex(
@@ -279,6 +333,7 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     #[test]
     fn decryption_of_encrypted_should_equal_message() -> Result<(), anyhow::Error> {
         let pk = PublicKey::from_hex(

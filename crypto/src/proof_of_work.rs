@@ -1,8 +1,10 @@
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 use std::convert::TryFrom;
 
 use hex::FromHex;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 use sodiumoxide::randombytes::randombytes;
 use thiserror::Error;
 
@@ -62,6 +64,7 @@ impl FromHex for ProofOfWork {
 }
 
 impl ProofOfWork {
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     pub fn generate(public_key: &PublicKey, target: f64) -> Self {
         let mut data = [0; CRYPTO_KEY_SIZE + POW_SIZE];
         data[..CRYPTO_KEY_SIZE].clone_from_slice(public_key.as_ref().as_ref());
@@ -188,6 +191,7 @@ mod tests {
         check_proof_of_work(data.as_ref(), 24.0).unwrap();
     }
 
+    #[cfg(all(feature = "std", not(feature = "no_sodium")))]
     #[test]
     fn simple_generate() {
         let pk =

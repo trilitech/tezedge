@@ -9,8 +9,12 @@ use crate::{
     crypto_box::CRYPTO_KEY_SIZE,
     CryptoError, PublicKeySignatureVerifier, PublicKeyWithHash,
 };
+
+#[cfg(feature = "no_sodium")]
+use cryptoxide::ed25519::{verify, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+#[cfg(not(feature = "no_sodium"))]
 use zeroize::Zeroize;
 
 mod prefix_bytes {
@@ -523,6 +527,7 @@ impl TryFrom<PublicKeyP256> for ContractTz3Hash {
     }
 }
 
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 impl TryFrom<&PublicKeyEd25519> for sodiumoxide::crypto::sign::PublicKey {
     type Error = FromBytesError;
 
@@ -536,7 +541,22 @@ impl TryFrom<&PublicKeyEd25519> for sodiumoxide::crypto::sign::PublicKey {
         ))
     }
 }
+#[cfg(feature = "no_sodium")]
+impl TryFrom<&PublicKeyEd25519> for [u8; PUBLIC_KEY_LENGTH] {
+    type Error = FromBytesError;
 
+    fn try_from(source: &PublicKeyEd25519) -> Result<Self, Self::Error> {
+        let bytes: [u8; PUBLIC_KEY_LENGTH] = source
+            .0
+            .as_slice()
+            .try_into()
+            .map_err(|_| FromBytesError::InvalidSize)?;
+
+        Ok(bytes)
+    }
+}
+
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 impl TryFrom<&Signature> for sodiumoxide::crypto::sign::Signature {
     type Error = FromBytesError;
 
@@ -551,6 +571,7 @@ impl TryFrom<&Signature> for sodiumoxide::crypto::sign::Signature {
     }
 }
 
+#[cfg(not(feature = "no_sodium"))]
 impl SeedEd25519 {
     pub fn keypair(self) -> Result<(PublicKeyEd25519, SecretKeyEd25519), CryptoError> {
         let mut v = self.0;
@@ -568,6 +589,7 @@ impl SeedEd25519 {
     }
 }
 
+#[cfg(not(feature = "no_sodium"))]
 pub struct SecretKeyEd25519(sodiumoxide::crypto::sign::SecretKey);
 
 impl PublicKeyEd25519 {
@@ -580,6 +602,7 @@ impl PublicKeyEd25519 {
     }
 }
 
+#[cfg(not(feature = "no_sodium"))]
 impl SecretKeyEd25519 {
     pub fn sign<T, I>(&self, data: T) -> Result<Signature, CryptoError>
     where
@@ -592,19 +615,44 @@ impl SecretKeyEd25519 {
     }
 }
 
+#[cfg(feature = "no_sodium")]
+impl TryFrom<&Signature> for [u8; SIGNATURE_LENGTH] {
+    type Error = FromBytesError;
+
+    fn try_from(source: &Signature) -> Result<Self, Self::Error> {
+        Ok(source
+            .0
+            .as_slice()
+            .try_into()
+            .map_err(|_| FromBytesError::InvalidSize)?)
+    }
+}
+
 impl PublicKeySignatureVerifier for PublicKeyEd25519 {
     type Signature = Signature;
     type Error = CryptoError;
 
     /// Verifies the correctness of `bytes` signed by Ed25519 as the `signature`.
     fn verify_signature(&self, signature: &Signature, bytes: &[u8]) -> Result<bool, Self::Error> {
-        Ok(sodiumoxide::crypto::sign::verify_detached(
+        #[cfg(all(feature = "std", not(feature = "no_sodium")))]
+        let result = Ok(sodiumoxide::crypto::sign::verify_detached(
             &signature
                 .try_into()
                 .map_err(|_| CryptoError::InvalidSignature)?,
             bytes,
             &self.try_into().map_err(|_| CryptoError::InvalidPublicKey)?,
-        ))
+        ));
+
+        #[cfg(feature = "no_sodium")]
+        let result = Ok(verify(
+            bytes,
+            &self.try_into().map_err(|_| CryptoError::InvalidPublicKey)?,
+            &signature
+                .try_into()
+                .map_err(|_| CryptoError::InvalidSignature)?,
+        ));
+
+        result
     }
 }
 
