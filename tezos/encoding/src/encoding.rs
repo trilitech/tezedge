@@ -196,10 +196,10 @@ pub enum Encoding {
     /// Encoded as continuous binary representation.
     Tup(Vec<Encoding>),
     /// Is the collection of fields.
-    /// prefixed its length in bytes (4 Bytes), encoded as the concatenation of all the element in binary
+    /// prefixed its length in bytes (1 Bytes), encoded as the concatenation of all the element in binary
     ShortDynamic(Box<Encoding>),
     /// Is the collection of fields.
-    /// prefixed its length in bytes (1 Byte), encoded as the concatenation of all the element in binary
+    /// prefixed its length in bytes (4 Byte), encoded as the concatenation of all the element in binary
     Dynamic(Box<Encoding>),
     /// Is the collection of fields.
     /// prefixed its length in bytes (4 Bytes), encoded as the concatenation of all the element in binary
