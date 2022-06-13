@@ -255,6 +255,7 @@ hash_nom_reader!(ContractKt1Hash);
 hash_nom_reader!(ContractTz1Hash);
 hash_nom_reader!(ContractTz2Hash);
 hash_nom_reader!(ContractTz3Hash);
+hash_nom_reader!(Layer2Tz4Hash);
 hash_nom_reader!(CryptoboxPublicKeyHash);
 hash_nom_reader!(PublicKeyEd25519);
 hash_nom_reader!(PublicKeySecp256k1);
