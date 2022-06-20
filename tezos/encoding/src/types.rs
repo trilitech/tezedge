@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use crate::fuzzing::bigint::BigIntMutator;
 
 /// This is a wrapper for [num_bigint::BigInt] type.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BigInt(pub num_bigint::BigInt);
 
 impl From<num_bigint::BigInt> for BigInt {
