@@ -22,18 +22,39 @@ impl From<()> for Blake2bError {
 }
 
 /// Generate digest of length 256 bits (32bytes) from arbitrary binary data
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 pub fn digest_256(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
     digest(data, 32)
 }
 
 // Generate digest of length 160 bits (20bytes) from arbitrary binary data
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 pub fn digest_160(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
     digest(data, 20)
 }
 
 /// Generate digest of length 128 bits (16bytes) from arbitrary binary data
+#[cfg(all(feature = "std", not(feature = "no_sodium")))]
 pub fn digest_128(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
     digest(data, 16)
+}
+
+/// Generate digest of length 256 bits (32bytes) from arbitrary binary data
+#[cfg(feature = "no_sodium")]
+pub fn digest_256(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
+    digest_const::<256>(data)
+}
+
+// Generate digest of length 160 bits (20bytes) from arbitrary binary data
+#[cfg(feature = "no_sodium")]
+pub fn digest_160(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
+    digest_const::<160>(data)
+}
+
+/// Generate digest of length 128 bits (16bytes) from arbitrary binary data
+#[cfg(feature = "no_sodium")]
+pub fn digest_128(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
+    digest_const::<128>(data)
 }
 
 /// Arbitrary Blake2b digest generation from generic data.
@@ -49,6 +70,7 @@ pub fn digest(data: &[u8], out_len: usize) -> Result<Vec<u8>, Blake2bError> {
     Ok(result)
 }
 
+/// Has some issues with certain 'out_len' due to not implemented in the context enum.
 #[cfg(feature = "no_sodium")]
 pub fn digest(data: &[u8], out_len: usize) -> Result<Vec<u8>, Blake2bError> {
     use cryptoxide::{blake2b::Blake2b, digest::Digest};
@@ -63,6 +85,27 @@ pub fn digest(data: &[u8], out_len: usize) -> Result<Vec<u8>, Blake2bError> {
     let mut result = vec![0; hasher.output_bytes()];
 
     hasher.result(result.as_mut_slice());
+
+    Ok(result)
+}
+
+#[cfg(feature = "no_sodium")]
+pub fn digest_const<const OUT_BITS: usize>(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
+    use cryptoxide::hashing::blake2b::Context;
+    use cryptoxide::{blake2b::Blake2b, digest::Digest};
+
+    if OUT_BITS / 8 < 16 || OUT_BITS / 8 > 64 {
+        return Err(Blake2bError::InvalidLenght);
+    }
+
+    //let mut hasher = Blake2b::new(out_len);
+    //hasher.input(data);
+    let hasher = Context::<OUT_BITS>::new();
+    let hasher = hasher.update(data);
+
+    let mut result = vec![0; OUT_BITS / 8];
+
+    hasher.finalize_at(result.as_mut_slice());
 
     Ok(result)
 }
