@@ -364,12 +364,8 @@ where
 pub fn list<'a, O, F>(f: F) -> impl FnMut(NomInput<'a>) -> NomResult<'a, Vec<O>>
 where
     F: FnMut(NomInput<'a>) -> NomResult<'a, O>,
-    O: Clone,
 {
-    fold_many0(f, Vec::new(), |mut list, item| {
-        list.push(item);
-        list
-    })
+    many0(f)
 }
 
 /// Parses input by applying parser `f` to it no more than `max` times.
