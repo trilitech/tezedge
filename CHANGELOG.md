@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Nothing.
+
 ### Deprecated
 
 - Nothing.
@@ -32,7 +33,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Nothing.
 
-## [2.3.2] - 2022-06-07
+## [3.1.1] - 2022-06-28
+
+### Fixed
+
+- Added missing jakarta protocol recognition to context timings tool.
+
+## [3.1.0] - 2022-06-27
+
+### Added
+- Jakarta support in rewards RPC.
+
+### Fixed
+
+- Fixed rewards RPC edge cases when the interrogated cycle was lower than preserved_cycles.
+- Fixed embedded baker for blocks with predecessor containing a protocol activation.
+- Minor fixes in Tezos encoding library.
+
+### Security
+
+- Removed `chrono` dependency from `node_monitoring` application.
+
+## [3.0.0] - 2022-06-25
+
+### Added
+- Internal baker built inside the node.
+- Prechecking for manager operations.
+- Jakarta support in mempool and bakers.
+
+### Changed
+
+- New version of block application code in the protocol runner that performs extra checks.
+- Prechecking for endorsement operations is now disabled by default.
+
+## [2.3.6] - 2022-06-16
+
+### Changed
+
+- Don't disconnect peers when in private mode.
+- Include `tezedge-baker` program in docker image.
+
+## [2.3.5] - 2022-06-16
+
+### Fixed
+
+- Baker live_block filter.
+
+## [2.3.4] - 2022-06-15
+
+### Added
+
+- Double-baking and double-endorsement protection in baker
+- Updated documentation.
+
+## [2.3.3] - 2022-06-10
 
 ### Fixed
 
@@ -649,22 +703,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Reworked websocket implementation, now uses warp::ws instead of default ws
 - Various changes around the P2P layer and bootstrapping
 
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
-### Security
-
-- Nothing.
-
 ## [0.9.1] - 2021-01-13
 
 ### Added
@@ -858,7 +896,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Ability to connect and bootstrap data from Tezos Babylonnet.
 - Protocol FFI integration.
 
-[Unreleased]: https://github.com/tezedge/tezedge/compare/v2.3.3...develop
+[Unreleased]: https://github.com/tezedge/tezedge/compare/v3.1.1...develop
+[3.1.1]: https://github.com/tezedge/tezedge/releases/v3.1.1
+[3.1.0]: https://github.com/tezedge/tezedge/releases/v3.1.0
+[3.0.0]: https://github.com/tezedge/tezedge/releases/v3.0.0
+[2.3.6]: https://github.com/tezedge/tezedge/releases/v2.3.6
+[2.3.5]: https://github.com/tezedge/tezedge/releases/v2.3.5
+[2.3.4]: https://github.com/tezedge/tezedge/releases/v2.3.4
 [2.3.3]: https://github.com/tezedge/tezedge/releases/v2.3.3
 [2.3.2]: https://github.com/tezedge/tezedge/releases/v2.3.2
 [2.3.1]: https://github.com/tezedge/tezedge/releases/v2.3.1

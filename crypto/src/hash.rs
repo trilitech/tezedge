@@ -596,6 +596,7 @@ impl SeedEd25519 {
 }
 
 #[cfg(not(feature = "no_sodium"))]
+#[derive(Clone)]
 pub struct SecretKeyEd25519(sodiumoxide::crypto::sign::SecretKey);
 
 impl PublicKeyEd25519 {

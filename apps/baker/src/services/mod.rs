@@ -10,7 +10,7 @@ pub mod timer;
 #[cfg(feature = "fuzzing")]
 mod operation_mutator;
 
-use std::{path::Path, sync::mpsc, time::SystemTime};
+use std::{fs::File, path::Path, sync::mpsc, time::SystemTime};
 
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
@@ -41,17 +41,9 @@ impl Services {
     ) -> (Self, impl Iterator<Item = EventWithTime>) {
         let (tx, rx) = mpsc::channel();
 
-        let log = logger::main_logger();
-        let srv = Services {
-            client: client::RpcClient::new(endpoint, tx.clone()),
-            crypto: key::CryptoService::read_key(&log, base_dir, baker).unwrap(),
-            log,
-            timer: timer::Timer::spawn(tx),
-        };
-
         (
-            srv,
-            rx.into_iter().map(|event| {
+            Self::new_with_id_and_log(endpoint, base_dir, baker, None, 0, tx),
+            rx.into_iter().map(|(_, event)| {
                 let unix_epoch = SystemTime::now()
                     .duration_since(SystemTime::UNIX_EPOCH)
                     .unwrap();
@@ -60,12 +52,32 @@ impl Services {
             }),
         )
     }
+
+    pub fn new_with_id_and_log(
+        endpoint: Url,
+        base_dir: &Path,
+        baker: &str,
+        log: Option<File>,
+        id: u8,
+        tx: mpsc::Sender<(u8, BakerAction)>,
+    ) -> Self {
+        let log = match log {
+            Some(f) => logger::file_logger(f),
+            None => logger::main_logger(),
+        };
+        Services {
+            client: client::RpcClient::new(endpoint, id, tx.clone()),
+            crypto: key::CryptoService::read_key(&log, base_dir, baker).unwrap(),
+            log,
+            timer: timer::Timer::spawn(id, tx),
+        }
+    }
 }
 
 pub trait BakerService {
     fn client(&self) -> &client::RpcClient;
 
-    fn crypto(&self) -> &key::CryptoService;
+    fn crypto(&mut self) -> &mut key::CryptoService;
 
     fn log(&self) -> &slog::Logger;
 
@@ -77,8 +89,8 @@ impl BakerService for Services {
         &self.client
     }
 
-    fn crypto(&self) -> &key::CryptoService {
-        &self.crypto
+    fn crypto(&mut self) -> &mut key::CryptoService {
+        &mut self.crypto
     }
 
     fn log(&self) -> &slog::Logger {

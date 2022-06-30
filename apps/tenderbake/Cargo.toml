@@ -1,6 +1,6 @@
 [package]
 name = "tenderbake"
-version = "2.3.3"
+version = "3.1.1"
 edition = "2021"
 
 [dependencies]
