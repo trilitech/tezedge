@@ -406,7 +406,6 @@ where
 pub fn dynamic<'a, O, F>(f: F) -> impl FnMut(NomInput<'a>) -> NomResult<'a, O>
 where
     F: FnMut(NomInput<'a>) -> NomResult<'a, O>,
-    O: Clone,
 {
     length_value(size, all_consuming(f))
 }
