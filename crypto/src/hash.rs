@@ -1,4 +1,4 @@
-// Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// Copyright (c) SimpleStaking, Viable Systems, Nomadic Labs and Tezedge Contributors
 // SPDX-License-Identifier: MIT
 
 use std::convert::{TryFrom, TryInto};
@@ -42,6 +42,7 @@ mod prefix_bytes {
     pub const GENERIC_SIGNATURE_HASH: [u8; 3] = [4, 130, 43];
     pub const NONCE_HASH: [u8; 3] = [69, 220, 169];
     pub const OPERATION_LIST_HASH: [u8; 2] = [133, 233];
+    pub const SMART_ROLLUP_HASH: [u8; 4] = [1, 118, 132, 217];
 }
 
 pub type Hash = Vec<u8>;
@@ -301,6 +302,7 @@ define_hash!(Ed25519Signature);
 define_hash!(Signature);
 define_hash!(NonceHash);
 define_hash!(OperationListHash);
+define_hash!(SmartRollupHash);
 
 /// Note: see Tezos ocaml lib_crypto/base58.ml
 #[derive(Debug, Copy, Clone, PartialEq, strum_macros::AsRefStr)]
@@ -353,6 +355,8 @@ pub enum HashType {
     NonceHash,
     // "\133\233" (* Lo(52) *)
     OperationListHash,
+    // "\001\118\132\217" (* scr1(37) *)
+    SmartRollupHash,
 }
 
 impl HashType {
@@ -384,6 +388,7 @@ impl HashType {
             HashType::Signature => &GENERIC_SIGNATURE_HASH,
             HashType::NonceHash => &NONCE_HASH,
             HashType::OperationListHash => &OPERATION_LIST_HASH,
+            HashType::SmartRollupHash => &SMART_ROLLUP_HASH,
         }
     }
 
@@ -408,7 +413,8 @@ impl HashType {
             | HashType::ContractTz1Hash
             | HashType::ContractTz2Hash
             | HashType::ContractTz3Hash
-            | HashType::Layer2Tz4Hash => 20,
+            | HashType::Layer2Tz4Hash
+            | HashType::SmartRollupHash => 20,
             HashType::PublicKeySecp256k1 | HashType::PublicKeyP256 => 33,
             HashType::SeedEd25519 => 32,
             HashType::Ed25519Signature | HashType::Signature => 64,
@@ -994,6 +1000,17 @@ mod tests {
     }
 
     #[test]
+    fn test_encode_smart_rollup_hash() -> Result<(), anyhow::Error> {
+        let decoded = HashType::SmartRollupHash
+            .hash_to_b58check(&hex::decode("4da51c5de7a1cdd494c15b53815e1faa4c1a96ca")?)?;
+        let expected = "scr1HLXM32GacPNDrhHDLAssZG88eWqCUbyLF";
+
+        assert_eq!(expected, decoded);
+
+        Ok(())
+    }
+
+    #[test]
     fn test_decode_block_header_hash() -> Result<(), anyhow::Error> {
         let decoded = HashType::BlockHash
             .b58check_to_hash("BKyQ9EofHrgaZKENioHyP4FZNsTmiSEcVmcghgzCC9cGhE7oCET")?;
@@ -1238,6 +1255,13 @@ mod tests {
         test!(ed25519_sig, Ed25519Signature, ["edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q"]);
 
         test!(generic_sig, Signature, ["sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"]);
+
+        test!(smart_rollup_hash, SmartRollupHash,
+              [
+                  "scr1HLXM32GacPNDrhHDLAssZG88eWqCUbyLF",
+                  "scr1Ew52VCdi6nF1JuokRGMqfmSeiAEXymW2m"
+              ]
+        );
     }
 
     #[test]
