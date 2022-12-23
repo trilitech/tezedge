@@ -1,4 +1,4 @@
-// Copyright (c) SimpleStaking, Viable Systems, Nomadic Labs and Tezedge Contributors
+// Copyright (c) SimpleStaking, Viable Systems, TriliTech, Nomadic Labs and Tezedge Contributors
 // SPDX-License-Identifier: MIT
 
 use std::convert::{TryFrom, TryInto};
@@ -42,7 +42,7 @@ mod prefix_bytes {
     pub const GENERIC_SIGNATURE_HASH: [u8; 3] = [4, 130, 43];
     pub const NONCE_HASH: [u8; 3] = [69, 220, 169];
     pub const OPERATION_LIST_HASH: [u8; 2] = [133, 233];
-    pub const SMART_ROLLUP_HASH: [u8; 4] = [1, 118, 132, 217];
+    pub const SMART_ROLLUP_HASH: [u8; 3] = [6, 124, 117];
 }
 
 pub type Hash = Vec<u8>;
@@ -355,7 +355,7 @@ pub enum HashType {
     NonceHash,
     // "\133\233" (* Lo(52) *)
     OperationListHash,
-    // "\001\118\132\217" (* scr1(37) *)
+    // "\006\124\117" (* sr1(36) *)
     SmartRollupHash,
 }
 
@@ -1003,7 +1003,7 @@ mod tests {
     fn test_encode_smart_rollup_hash() -> Result<(), anyhow::Error> {
         let decoded = HashType::SmartRollupHash
             .hash_to_b58check(&hex::decode("4da51c5de7a1cdd494c15b53815e1faa4c1a96ca")?)?;
-        let expected = "scr1HLXM32GacPNDrhHDLAssZG88eWqCUbyLF";
+        let expected = "sr1D7tjtYDmnugNWh8sGW91WJ3TPpCpqX1Dg";
 
         assert_eq!(expected, decoded);
 
@@ -1256,11 +1256,13 @@ mod tests {
 
         test!(generic_sig, Signature, ["sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"]);
 
-        test!(smart_rollup_hash, SmartRollupHash,
-              [
-                  "scr1HLXM32GacPNDrhHDLAssZG88eWqCUbyLF",
-                  "scr1Ew52VCdi6nF1JuokRGMqfmSeiAEXymW2m"
-              ]
+        test!(
+            smart_rollup_hash,
+            SmartRollupHash,
+            [
+                "sr1VN4vvy9uW7zftBvCRmh3RXm3KWS9atR9Q",
+                "sr1VHPsgVnB3gzRyRULuVV2zmbKyRBMq9gbV"
+            ]
         );
     }
 
