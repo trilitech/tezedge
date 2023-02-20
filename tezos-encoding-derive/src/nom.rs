@@ -1,4 +1,5 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
 // SPDX-License-Identifier: MIT
 
 use once_cell::sync::Lazy as SyncLazy;
@@ -10,15 +11,19 @@ use syn::spanned::Spanned;
 
 const NOM_TUPLE_MAX: usize = 26;
 
-pub fn generate_nom_read_for_data(data: &DataWithEncoding) -> TokenStream {
+pub fn generate_nom_read_for_data(
+    generics: &syn::Generics,
+    data: &DataWithEncoding,
+) -> TokenStream {
     let name = data.name;
     let nom_read = generate_nom_read(&data.encoding);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     quote_spanned! {
         data.name.span()=>
         #[allow(unused_parens)]
         #[allow(clippy::unnecessary_cast)]
         #[allow(clippy::redundant_closure_call)]
-        impl tezos_encoding::nom::NomReader for #name {
+        impl #impl_generics tezos_encoding::nom::NomReader for #name #ty_generics #where_clause {
             fn nom_read(bytes: &[u8]) -> tezos_encoding::nom::NomResult<Self> {
                 #nom_read(bytes)
             }

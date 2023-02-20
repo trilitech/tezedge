@@ -1,4 +1,5 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
 // SPDX-License-Identifier: MIT
 
 use crate::encoding::*;
@@ -6,11 +7,15 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 
-pub fn generate_encoding_for_data(data: &DataWithEncoding) -> TokenStream {
+pub fn generate_encoding_for_data(
+    generics: &syn::Generics,
+    data: &DataWithEncoding,
+) -> TokenStream {
     let name = data.name;
     let encoding = generate_encoding(&data.encoding);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     quote_spanned! {data.name.span()=>
-        impl tezos_encoding::encoding::HasEncoding for #name {
+        impl #impl_generics tezos_encoding::encoding::HasEncoding for #name #ty_generics #where_clause {
             fn encoding() -> tezos_encoding::encoding::Encoding {
                 #encoding
             }

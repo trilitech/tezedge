@@ -1,4 +1,5 @@
 // Copyright (c) SimpleStaking and Tezedge Contributors
+// SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
 // SPDX-License-Identifier: MIT
 
 use crate::encoding::*;
@@ -6,15 +7,19 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::spanned::Spanned;
 
-pub fn generate_bin_write_for_data(data: &DataWithEncoding) -> TokenStream {
+pub fn generate_bin_write_for_data(
+    generics: &syn::Generics,
+    data: &DataWithEncoding,
+) -> TokenStream {
     let name = data.name;
     let bin_write = generate_bin_write(&data.encoding);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     quote_spanned! {
         data.name.span()=>
         #[allow(unused_parens)]
         #[allow(clippy::unnecessary_cast)]
         #[allow(clippy::redundant_closure_call)]
-        impl tezos_encoding::enc::BinWriter for #name {
+        impl #impl_generics tezos_encoding::enc::BinWriter for #name #ty_generics #where_clause {
             fn bin_write(&self, out: &mut Vec<u8>) -> tezos_encoding::enc::BinResult {
                 #bin_write(self, out)
             }
