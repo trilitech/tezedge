@@ -1,4 +1,5 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
 // SPDX-License-Identifier: MIT
 #![forbid(unsafe_code)]
 
@@ -21,7 +22,7 @@ pub fn derive_tezos_encoding(input: TokenStream) -> TokenStream {
         Ok(encoding) => encoding,
         Err(e) => return e.into_compile_error().into(),
     };
-    let tokens = crate::enc::generate_encoding_for_data(&encoding);
+    let tokens = crate::enc::generate_encoding_for_data(&input.generics, &encoding);
     tokens.into()
 }
 
@@ -32,7 +33,7 @@ pub fn derive_nom_reader(input: TokenStream) -> TokenStream {
         Ok(encoding) => encoding,
         Err(e) => return e.into_compile_error().into(),
     };
-    let tokens = crate::nom::generate_nom_read_for_data(&encoding);
+    let tokens = crate::nom::generate_nom_read_for_data(&input.generics, &encoding);
     tokens.into()
 }
 
@@ -43,6 +44,6 @@ pub fn derive_bin_writer(input: TokenStream) -> TokenStream {
         Ok(encoding) => encoding,
         Err(e) => return e.into_compile_error().into(),
     };
-    let tokens = crate::bin::generate_bin_write_for_data(&encoding);
+    let tokens = crate::bin::generate_bin_write_for_data(&input.generics, &encoding);
     tokens.into()
 }
