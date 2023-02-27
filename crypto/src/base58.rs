@@ -1,4 +1,5 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
 use base58::{FromBase58, ToBase58};
@@ -50,6 +51,7 @@ pub trait FromBase58Check {
     const CHECKSUM_BYTE_SIZE: usize = 4;
 
     /// Convert a value of `self`, interpreted as base58check encoded data, into the tuple with version and payload as bytes vector.
+    #[allow(clippy::wrong_self_convention)]
     fn from_base58check(&self) -> Result<Vec<u8>, FromBase58CheckError>;
 }
 

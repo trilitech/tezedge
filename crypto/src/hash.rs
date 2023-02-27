@@ -1,4 +1,5 @@
-// Copyright (c) SimpleStaking, Viable Systems, TriliTech and Tezedge Contributors
+// Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// SPDX-CopyrightText: 2022-2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
 use std::convert::{TryFrom, TryInto};
@@ -34,9 +35,12 @@ mod prefix_bytes {
     pub const PUBLIC_KEY_ED25519: [u8; 4] = [13, 15, 37, 217];
     pub const PUBLIC_KEY_SECP256K1: [u8; 4] = [3, 254, 226, 86];
     pub const PUBLIC_KEY_P256: [u8; 4] = [3, 178, 139, 127];
+    pub const PUBLIC_KEY_BLS: [u8; 4] = [6, 149, 135, 204];
     pub const SEED_ED25519: [u8; 4] = [43, 246, 78, 7];
+    pub const SECRET_KEY_BLS: [u8; 4] = [3, 150, 192, 40];
     pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];
     pub const GENERIC_SIGNATURE_HASH: [u8; 3] = [4, 130, 43];
+    pub const BLS_SIGNATURE_HASH: [u8; 4] = [40, 171, 64, 207];
     pub const NONCE_HASH: [u8; 3] = [69, 220, 169];
     pub const OPERATION_LIST_HASH: [u8; 2] = [133, 233];
     pub const SMART_ROLLUP_HASH: [u8; 3] = [6, 124, 117];
@@ -294,9 +298,12 @@ define_hash!(CryptoboxPublicKeyHash);
 define_hash!(PublicKeyEd25519);
 define_hash!(PublicKeySecp256k1);
 define_hash!(PublicKeyP256);
+define_hash!(PublicKeyBls);
 define_hash!(SeedEd25519);
+define_hash!(SecretKeyBls);
 define_hash!(Ed25519Signature);
 define_hash!(Signature);
+define_hash!(BlsSignature);
 define_hash!(NonceHash);
 define_hash!(OperationListHash);
 define_hash!(SmartRollupHash);
@@ -342,12 +349,18 @@ pub enum HashType {
     PublicKeySecp256k1,
     // "\003\178\139\127" (* p2pk(55) *)
     PublicKeyP256,
+    // "\006\149\135\204" (* BLpk(76) *)
+    PublicKeyBls,
     // "\043\246\078\007" (* edsk(98) *)
     SeedEd25519,
+    // "\003\150\192\040" (* BLsk(54) *)
+    SecretKeyBls,
     // "\009\245\205\134\018" (* edsig(99) *)
     Ed25519Signature,
     // "\004\130\043" (* sig(96) *)
     Signature,
+    // "\040\171\064\207" (* BLsig(142) *)
+    BlsSignature,
     // "\069\220\169" (* nce(53) *)
     NonceHash,
     // "\133\233" (* Lo(52) *)
@@ -380,9 +393,12 @@ impl HashType {
             HashType::PublicKeyEd25519 => &PUBLIC_KEY_ED25519,
             HashType::PublicKeySecp256k1 => &PUBLIC_KEY_SECP256K1,
             HashType::PublicKeyP256 => &PUBLIC_KEY_P256,
+            HashType::PublicKeyBls => &PUBLIC_KEY_BLS,
             HashType::SeedEd25519 => &SEED_ED25519,
+            HashType::SecretKeyBls => &SECRET_KEY_BLS,
             HashType::Ed25519Signature => &ED22519_SIGNATURE_HASH,
             HashType::Signature => &GENERIC_SIGNATURE_HASH,
+            HashType::BlsSignature => &BLS_SIGNATURE_HASH,
             HashType::NonceHash => &NONCE_HASH,
             HashType::OperationListHash => &OPERATION_LIST_HASH,
             HashType::SmartRollupHash => &SMART_ROLLUP_HASH,
@@ -413,8 +429,10 @@ impl HashType {
             | HashType::ContractTz4Hash
             | HashType::SmartRollupHash => 20,
             HashType::PublicKeySecp256k1 | HashType::PublicKeyP256 => 33,
-            HashType::SeedEd25519 => 32,
+            HashType::SeedEd25519 | HashType::SecretKeyBls => 32,
+            HashType::PublicKeyBls => 48,
             HashType::Ed25519Signature | HashType::Signature => 64,
+            HashType::BlsSignature => 96,
         }
     }
 
@@ -505,6 +523,7 @@ macro_rules! pk_with_hash {
 pk_with_hash!(PublicKeyEd25519, ContractTz1Hash);
 pk_with_hash!(PublicKeySecp256k1, ContractTz2Hash);
 pk_with_hash!(PublicKeyP256, ContractTz3Hash);
+pk_with_hash!(PublicKeyBls, ContractTz4Hash);
 
 impl TryFrom<PublicKeyEd25519> for ContractTz1Hash {
     type Error = TryFromPKError;
@@ -530,6 +549,16 @@ impl TryFrom<PublicKeyP256> for ContractTz3Hash {
     type Error = TryFromPKError;
 
     fn try_from(source: PublicKeyP256) -> Result<Self, Self::Error> {
+        let hash = blake2b::digest_160(&source.0)?;
+        let typed_hash = Self::from_bytes(&hash)?;
+        Ok(typed_hash)
+    }
+}
+
+impl TryFrom<PublicKeyBls> for ContractTz4Hash {
+    type Error = TryFromPKError;
+
+    fn try_from(source: PublicKeyBls) -> Result<Self, Self::Error> {
         let hash = blake2b::digest_160(&source.0)?;
         let typed_hash = Self::from_bytes(&hash)?;
         Ok(typed_hash)
@@ -1188,6 +1217,18 @@ mod tests {
         test!(pk_secp256k1, PublicKeySecp256k1, []);
 
         test!(pk_p256, PublicKeyP256, []);
+
+        test!(
+            pk_bls,
+            PublicKeyBls,
+            ["BLpk1xKLj4548aKR3x7NRwjz5zUnW54MMJAbwTC2qy7owXHvhFomZsYwgAF7agLEzEgrjj5LDeBh"]
+        );
+
+        test!(
+            sk_bls,
+            SecretKeyBls,
+            ["BLsk1WTwJFkLU2P57itDq1cgEUqJK7Fwygvtj49vT4HeLfNBXRgpDA"]
+        );
 
         test!(ed25519_sig, Ed25519Signature, ["edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q"]);
 
