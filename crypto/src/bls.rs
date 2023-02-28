@@ -2,12 +2,14 @@
 //
 // SPDX-License-Identifier: MIT
 
-//! BLS support (min_key).
+//! BLS support (min_pk).
 
 use crate::hash::BlsSignature;
+use crate::hash::ContractTz4Hash;
 use crate::hash::PublicKeyBls;
 use crate::hash::SecretKeyBls;
 use crate::CryptoError;
+use crate::PublicKeyWithHash;
 use blst::min_pk;
 use blst::min_pk::{AggregateSignature, SecretKey};
 use blst::BLST_ERROR;
@@ -121,14 +123,6 @@ impl TryFrom<&BlsSignature> for min_pk::Signature {
 
 /// Bls SecretKey
 impl SecretKeyBls {
-    /// Generate a secret key from initial key material.
-    pub fn from_ikm(ikm: [u8; 32]) -> Result<Self, CryptoError> {
-        let sk = SecretKey::key_gen(&ikm, &[])
-            .map_err(|e| CryptoError::AlgorithmError(format!("BLST_ERROR: {:?}", e)))?;
-
-        Ok(Self(sk.to_bytes().to_vec()))
-    }
-
     /// Derive the public key for the current secret key.
     pub fn derive_pk(&self) -> Result<PublicKeyBls, CryptoError> {
         let sk = SecretKey::from_bytes(&self.0)
@@ -161,33 +155,76 @@ fn prepend_public_key(msg: &[u8], pk: &PublicKeyBls) -> Vec<u8> {
     message_with_pk
 }
 
+/// Generate a keypair from initial key material.
+pub fn keypair_from_ikm(ikm: [u8; 32]) -> Result<(SecretKeyBls, PublicKeyBls), CryptoError> {
+    let sk = SecretKey::key_gen(&ikm, &[])
+        .map_err(|e| CryptoError::AlgorithmError(format!("BLST_ERROR: {:?}", e)))?;
+
+    let pk = sk.sk_to_pk();
+
+    let pk = PublicKeyBls(pk.to_bytes().to_vec());
+    let sk = SecretKeyBls(sk.to_bytes().to_vec());
+
+    Ok((sk, pk))
+}
+
+/// Generate a keypair, with tz4 hash, from initial key material.
+pub fn keypair_with_hash_from_ikm(
+    ikm: [u8; 32],
+) -> Result<(SecretKeyBls, PublicKeyBls, ContractTz4Hash), CryptoError> {
+    let (sk, pk) = keypair_from_ikm(ikm)?;
+
+    let hash = pk
+        .pk_hash()
+        .map_err(|e| CryptoError::AlgorithmError(format!("BLS_PK_HASH: {:?}", e)))?;
+
+    Ok((sk, pk, hash))
+}
+
+/// Generate arbitrary bls keypair for testing with [proptest].
+///
+/// [proptest]: <https://crates.io/crates/proptest>.
 #[cfg(any(test, feature = "std"))]
-mod bls_gen {
-    //! Generation of Bls keys used for testing.
-    //!
-    //! Use
-    //! - `key in BlsKey::arb()` during Property Based Tests.
-    //! - `let key: BlsKey = Faker.fake()` in unit tests, when hardcoding a key is
-    //!   undesirable.
-    use crate::hash::SecretKeyBls;
+pub fn bls_arb_keypair() -> proptest::prelude::BoxedStrategy<(SecretKeyBls, PublicKeyBls)> {
     use proptest::prelude::*;
+
+    any::<[u8; 32]>()
+        .prop_map(keypair_from_ikm)
+        .prop_map(Result::unwrap)
+        .boxed()
+}
+
+/// Generate arbitrary bls keypair for testing with [proptest].
+///
+/// [proptest]: <https://crates.io/crates/proptest>.
+#[cfg(any(test, feature = "std"))]
+pub fn bls_arb_keypair_with_hash(
+) -> proptest::prelude::BoxedStrategy<(SecretKeyBls, PublicKeyBls, ContractTz4Hash)> {
+    use proptest::prelude::*;
+
+    any::<[u8; 32]>()
+        .prop_map(keypair_with_hash_from_ikm)
+        .prop_map(Result::unwrap)
+        .boxed()
+}
+
+/// Generate random bls keypair.
+#[cfg(any(test, feature = "std"))]
+pub fn bls_generate_keypair() -> Result<(SecretKeyBls, PublicKeyBls), crate::CryptoError> {
     use rand::Rng;
 
-    impl SecretKeyBls {
-        /// Generate arbitrary bls keys for testing
-        pub fn arb() -> BoxedStrategy<Self> {
-            any::<[u8; 32]>()
-                .prop_map(Self::from_ikm)
-                .prop_map(Result::unwrap)
-                .boxed()
-        }
+    let ikm = rand::thread_rng().gen::<[u8; 32]>();
+    keypair_from_ikm(ikm)
+}
 
-        /// Generate random bls key
-        pub fn generate() -> Result<Self, crate::CryptoError> {
-            let ikm = rand::thread_rng().gen::<[u8; 32]>();
-            Self::from_ikm(ikm)
-        }
-    }
+/// Generate random bls keypair, with tz4 hash.
+#[cfg(any(test, feature = "std"))]
+pub fn bls_generate_keypair_with_hash(
+) -> Result<(SecretKeyBls, PublicKeyBls, ContractTz4Hash), crate::CryptoError> {
+    use rand::Rng;
+
+    let ikm = rand::thread_rng().gen::<[u8; 32]>();
+    keypair_with_hash_from_ikm(ikm)
 }
 
 #[cfg(test)]
@@ -299,9 +336,7 @@ mod tests {
     #[test]
     fn bls_sign_with_public_key() {
         let ikm = [0; 32];
-        let key = SecretKeyBls::from_ikm(ikm).expect("Valid ikm");
-        let pk = key.derive_pk().expect("Should derive pk");
-        let pk_hash = pk.pk_hash().unwrap();
+        let (sk, pk, pk_hash) = keypair_with_hash_from_ikm(ikm).expect("Valid ikm");
 
         assert_eq!(
             "tz4TpX5Qb3w7xnnnwSpjFs7Kq35GC4qr3uMg",
@@ -329,7 +364,7 @@ mod tests {
             101, 116, 115,
         ];
 
-        let sig = key.sign(msg_bytes).expect("Signing should succeed");
+        let sig = sk.sign(msg_bytes).expect("Signing should succeed");
 
         let expected_sig = &[
             170, 60, 254, 35, 122, 181, 133, 165, 130, 161, 54, 157, 133, 39, 163, 49, 146, 56, 61,
@@ -421,9 +456,8 @@ mod tests {
 
     proptest! {
       #[test]
-      fn verify_signature_of_single_pk(sk in SecretKeyBls::arb(), msg in any::<Vec<u8>>()) {
+      fn verify_signature_of_single_pk((sk, pk) in bls_arb_keypair(), msg in any::<Vec<u8>>()) {
           let sig = sk.sign(msg.as_slice()).unwrap();
-          let pk = sk.derive_pk().unwrap();
 
           let msg_keys = [(msg.as_slice(), &pk)];
 
@@ -434,18 +468,15 @@ mod tests {
 
       #[test]
       fn verify_aggregate_signature(
-          fst_key in SecretKeyBls::arb(),
-          snd_key in SecretKeyBls::arb(),
+          (fst_sk, fst_pk) in bls_arb_keypair(),
+          (snd_sk, snd_pk) in bls_arb_keypair(),
           fst_msg in any::<Vec<u8>>(),
           snd_msg in any::<Vec<u8>>(),
       ) {
-          let sig1 = fst_key.sign(fst_msg.as_slice()).unwrap();
-          let sig2 = fst_key.sign(snd_msg.as_slice()).unwrap();
-          let sig3 = snd_key.sign(fst_msg.as_slice()).unwrap();
-          let sig4 = snd_key.sign(snd_msg.as_slice()).unwrap();
-
-          let fst_pk = fst_key.derive_pk().unwrap();
-          let snd_pk = snd_key.derive_pk().unwrap();
+          let sig1 = fst_sk.sign(fst_msg.as_slice()).unwrap();
+          let sig2 = fst_sk.sign(snd_msg.as_slice()).unwrap();
+          let sig3 = snd_sk.sign(fst_msg.as_slice()).unwrap();
+          let sig4 = snd_sk.sign(snd_msg.as_slice()).unwrap();
 
           let sig = BlsSignature::aggregate_sigs(&[&sig1, &sig2, &sig3, &sig4])
               .expect("aggregation should work");
@@ -464,12 +495,11 @@ mod tests {
 
       #[test]
       fn verify_signature_fails_with_wrong_pk(
-          signing_key in SecretKeyBls::arb(),
-          other_key in SecretKeyBls::arb(),
+          (signing_sk, _) in bls_arb_keypair(),
+          (_, other_pk) in bls_arb_keypair(),
           msg in any::<Vec<u8>>()
       ) {
-          let sig = signing_key.sign(msg.as_slice()).unwrap();
-          let other_pk = other_key.derive_pk().unwrap();
+          let sig = signing_sk.sign(msg.as_slice()).unwrap();
 
           let msg_keys = [(msg.as_slice(), &other_pk)];
 
