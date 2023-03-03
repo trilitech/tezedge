@@ -19,7 +19,7 @@ rand = { version = "0.7.3", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 strum = "0.20"
 strum_macros = "0.20"
-zeroize = { version = "1.5" }
+zeroize = { version = "1.3" }
 ed25519-compact = { version ="2.0", default-features = false }
 cryptoxide = { version = "0.4.4", default-features = false, features = ["sha2", "blake2"] }
 blst = "0.3.7"
