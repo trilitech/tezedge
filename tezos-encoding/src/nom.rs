@@ -262,6 +262,7 @@ hash_nom_reader!(PublicKeyEd25519);
 hash_nom_reader!(PublicKeySecp256k1);
 hash_nom_reader!(PublicKeyP256);
 hash_nom_reader!(PublicKeyBls);
+hash_nom_reader!(SecretKeyEd25519);
 hash_nom_reader!(SecretKeyBls);
 hash_nom_reader!(Signature);
 hash_nom_reader!(BlsSignature);
