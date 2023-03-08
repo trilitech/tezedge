@@ -37,6 +37,7 @@ mod prefix_bytes {
     pub const PUBLIC_KEY_P256: [u8; 4] = [3, 178, 139, 127];
     pub const PUBLIC_KEY_BLS: [u8; 4] = [6, 149, 135, 204];
     pub const SEED_ED25519: [u8; 4] = [43, 246, 78, 7];
+    pub const SECRET_KEY_ED25519: [u8; 4] = [43, 246, 78, 7];
     pub const SECRET_KEY_BLS: [u8; 4] = [3, 150, 192, 40];
     pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];
     pub const GENERIC_SIGNATURE_HASH: [u8; 3] = [4, 130, 43];
@@ -300,6 +301,7 @@ define_hash!(PublicKeySecp256k1);
 define_hash!(PublicKeyP256);
 define_hash!(PublicKeyBls);
 define_hash!(SeedEd25519);
+define_hash!(SecretKeyEd25519);
 define_hash!(SecretKeyBls);
 define_hash!(Ed25519Signature);
 define_hash!(Signature);
@@ -351,8 +353,10 @@ pub enum HashType {
     PublicKeyP256,
     // "\006\149\135\204" (* BLpk(76) *)
     PublicKeyBls,
-    // "\043\246\078\007" (* edsk(98) *)
+    // "\013\015\058\007" (* edsk(54) *)
     SeedEd25519,
+    // "\043\246\078\007" (* edsk(98) *)
+    SecretKeyEd25519,
     // "\003\150\192\040" (* BLsk(54) *)
     SecretKeyBls,
     // "\009\245\205\134\018" (* edsig(99) *)
@@ -395,6 +399,7 @@ impl HashType {
             HashType::PublicKeyP256 => &PUBLIC_KEY_P256,
             HashType::PublicKeyBls => &PUBLIC_KEY_BLS,
             HashType::SeedEd25519 => &SEED_ED25519,
+            HashType::SecretKeyEd25519 => &SECRET_KEY_ED25519,
             HashType::SecretKeyBls => &SECRET_KEY_BLS,
             HashType::Ed25519Signature => &ED22519_SIGNATURE_HASH,
             HashType::Signature => &GENERIC_SIGNATURE_HASH,
@@ -431,7 +436,7 @@ impl HashType {
             HashType::PublicKeySecp256k1 | HashType::PublicKeyP256 => 33,
             HashType::SeedEd25519 | HashType::SecretKeyBls => 32,
             HashType::PublicKeyBls => 48,
-            HashType::Ed25519Signature | HashType::Signature => 64,
+            HashType::SecretKeyEd25519 | HashType::Ed25519Signature | HashType::Signature => 64,
             HashType::BlsSignature => 96,
         }
     }
@@ -593,11 +598,9 @@ impl SeedEd25519 {
         v.zeroize();
         let seed = Seed::new(seed_bytes);
         let KeyPair { pk, sk } = KeyPair::from_seed(seed);
-        Ok((PublicKeyEd25519(pk.to_vec()), SecretKeyEd25519(sk)))
+        Ok((PublicKeyEd25519(pk.to_vec()), SecretKeyEd25519(sk.to_vec())))
     }
 }
-
-pub struct SecretKeyEd25519(ed25519_compact::SecretKey);
 
 #[derive(Debug, Error, PartialEq)]
 pub enum PublicKeyError {
@@ -621,8 +624,20 @@ impl SecretKeyEd25519 {
         T: IntoIterator<Item = I>,
         I: AsRef<[u8]>,
     {
+        use ed25519_compact::SecretKey;
+
+        let sk = self
+            .0
+            .as_slice()
+            .try_into()
+            .map(SecretKey::new)
+            .map_err(|_| CryptoError::InvalidKeySize {
+                expected: SecretKey::BYTES,
+                actual: self.0.len(),
+            })?;
+
         let digest = blake2b::digest_all(data, 32).map_err(|_| CryptoError::InvalidMessage)?;
-        let signature = self.0.sign(&digest, None);
+        let signature = sk.sign(&digest, None);
         Ok(Signature(signature.to_vec()))
     }
 }
@@ -1208,6 +1223,12 @@ mod tests {
             tz4_hash,
             ContractTz4Hash,
             ["tz4FENGt5zkiGaHPm1ya4MgLomgkL1k7Dy7q"]
+        );
+
+        test!(
+            seed_ed25519,
+            SeedEd25519,
+            ["edsk31vznjHSSpGExDMHYASz45VZqXN4DPxvsa4hAyY8dHM28cZzp6"]
         );
 
         test!(pk_hash, CryptoboxPublicKeyHash, []);

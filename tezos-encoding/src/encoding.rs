@@ -336,6 +336,7 @@ hash_has_encoding!(PublicKeyEd25519, PUBLIC_KEY_ED25519);
 hash_has_encoding!(PublicKeySecp256k1, PUBLIC_KEY_SECP256K1);
 hash_has_encoding!(PublicKeyP256, PUBLIC_KEY_P256);
 hash_has_encoding!(PublicKeyBls, PUBLIC_KEY_BLS);
+hash_has_encoding!(SecretKeyEd25519, SECRET_KEY_ED25519);
 hash_has_encoding!(SecretKeyBls, SECRET_KEY_BLS);
 hash_has_encoding!(Signature, SIGNATURE);
 hash_has_encoding!(BlsSignature, BLS_SIGNATURE_HASH);
