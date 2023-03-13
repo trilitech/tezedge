@@ -898,8 +898,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "tezos_crypto"
-version = "0.4.1"
+name = "tezos_crypto_rs"
+version = "0.4.2"
 dependencies = [
  "anyhow",
  "base58",
@@ -924,7 +924,7 @@ dependencies = [
 
 [[package]]
 name = "tezos_data_encoding"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "bit-vec",
  "hex",
@@ -934,14 +934,14 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_json",
- "tezos_crypto",
+ "tezos_crypto_rs",
  "tezos_data_encoding_derive",
  "thiserror",
 ]
 
 [[package]]
 name = "tezos_data_encoding_derive"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "lazy_static",
  "once_cell",
