@@ -33,6 +33,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Nothing.
 
+## [0.4.2] - 2023-03-14
+
+### Changed
+
+- `tezos_crypto` rename to `tezos_crypto_rs`, due to conflict on crates.io
+
 ## [0.4.1] - 2023-03-14
 
 ### Changed
