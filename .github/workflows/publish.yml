@@ -1,0 +1,19 @@
+name: publish
+
+on:
+  push:
+    tags:        
+      - '*'  
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@1.60.0
+      - name: dry-run
+        run: cargo publish --dry-run
+      - name: publish
+        run: cargo publish --token ${CRATES_TOKEN}
+        env:
+          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
