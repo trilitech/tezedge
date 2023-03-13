@@ -13,18 +13,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.60.0
       - name: dry-run (crypto)
         run: cargo publish --dry-run -p tezos_crypto
-      - name: dry-run (derive)
-        run: cargo publish --dry-run -p tezos_data_encoding_derive
-      - name: dry-run (encoding)
-        run: cargo publish --dry-run -p tezos_data_encoding
       - name: publish (crypto)
         run: cargo publish -p tezos_crypto --token ${CRATES_TOKEN}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+      - name: dry-run (derive)
+        run: cargo publish --dry-run -p tezos_data_encoding_derive
       - name: publish (derive)
         run: cargo publish -p tezos_data_encoding_derive --token ${CRATES_TOKEN}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+      - name: dry-run (encoding)
+        run: cargo publish --dry-run -p tezos_data_encoding
       - name: publish (encoding)
         run: cargo publish -p tezos_data_encoding --token ${CRATES_TOKEN}
         env:
