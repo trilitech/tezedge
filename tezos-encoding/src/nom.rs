@@ -15,7 +15,7 @@ use nom::{
     Err, InputLength, Parser, Slice,
 };
 use num_bigint::{BigInt, BigUint, Sign};
-pub use tezos_encoding_derive::NomReader;
+pub use tezos_data_encoding_derive::NomReader;
 
 use crate::types::{Mutez, Zarith};
 

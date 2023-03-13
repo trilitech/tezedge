@@ -5,6 +5,8 @@
 
 //! This crate provides serialization and deserialization functionality for the data types used by the Tezos shell.
 
+extern crate tezos_crypto as crypto;
+
 mod bit_utils;
 pub mod types;
 

@@ -33,6 +33,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Nothing.
 
+## [4.0.0] - 2023-03-13
+
+### Added
+
+- support `tz4`, `sr1` hashes.
+- `SecretKeyBls`, `PublicKeyBls` support.
+
+### Changed
+
+- minimum supported rust version bumped to `1.60`.
+- `SecretKeyEd25519` now implements `Debug`, and can be encoded/decoded.
+- `crypto` renamed to `tezos_crypto`.
+- `tezos_encoding_derive` now supports deriving over generic structs.
+- `tezos_encoding` `nom::list`, `nom::dynamic` no longer require `Clone`.
+- `lib_sodium` dependency replaced with `cryptoxide` for improved Wasm support.
+
+### Removed
+
+- All crates, except for `crypto`, `tezos_encoding` & `tezos_encoding_derive`.
+- `crypto::seeded_step`, `crypto::cryptobox` modules removed.
+
 ## [3.1.1] - 2022-06-28
 
 ### Fixed

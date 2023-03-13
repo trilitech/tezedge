@@ -9,7 +9,7 @@ use crate::bit_utils::BitReverse;
 use crate::types::{Mutez, Zarith};
 
 use num_bigint::BigUint;
-pub use tezos_encoding_derive::BinWriter;
+pub use tezos_data_encoding_derive::BinWriter;
 
 use thiserror::Error;
 

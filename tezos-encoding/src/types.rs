@@ -466,7 +466,7 @@ pub const BYTE_FIELD_NONE: u8 = 0;
 /// First we need to convert it to intermediate form represented by the [Value] type.
 /// Structure will be converted to:
 /// ```rust
-/// use crate::tezos_encoding::types::Value;
+/// use crate::tezos_data_encoding::types::Value;
 /// let intermediate = Value::Record(vec![
 ///     ("count".into(), Value::Int32(1)),
 ///     ("diameter".into(), Value::Float(102.95))
