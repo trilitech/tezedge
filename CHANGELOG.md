@@ -33,6 +33,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Nothing.
 
+## [4.0.1] - 2023-03-14
+
+### Changed
+
+- `tezos_encoding` renamed to `tezos_data_encoding`
+- `tezos_encoding_derive` renamed to `tezos_data_encoding_derive`
+
 ## [4.0.0] - 2023-03-13
 
 ### Added
