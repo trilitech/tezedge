@@ -1,4 +1,4 @@
-# TezEdge [![Changelog][changelog-badge]][changelog] [![MIT licensed]][MIT link]
+# TezEdge
 
 ---
 
