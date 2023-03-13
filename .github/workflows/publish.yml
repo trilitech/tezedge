@@ -14,7 +14,7 @@ jobs:
       - name: dry-run (crypto)
         run: cargo publish --dry-run -p tezos_crypto
       - name: publish (crypto)
-        run: cargo publish -p tezos_crypto --token ${CRATES_TOKEN}
+        run: cargo publish -p tezos_crypto_rs --token ${CRATES_TOKEN}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
       - name: dry-run (derive)
