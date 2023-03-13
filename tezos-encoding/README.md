@@ -1,4 +1,5 @@
-Tezos encoding
+Tezos data encoding
 ===========
 
-All incoming messages are transformed into standard Rust structures for easy manipulation using de component. This component implements serialization and deserialization of all data types used in Tezos messages.
+Helpers for (de)serialization of rust structures, to match the binary format produced by the `Data_encoding` libary
+used by [octez](https://gitlab.com/tezos/tezos).

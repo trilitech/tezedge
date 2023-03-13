@@ -1,4 +1,6 @@
-// Copyright (c) SimpleStaking, Viable Systems, TriliTech and Tezedge Contributors
+// Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
+//
 // SPDX-License-Identifier: MIT
 
 use cryptoxide::blake2b::Blake2b;
@@ -47,12 +49,6 @@ pub fn digest(data: &[u8], out_len: usize) -> Result<Vec<u8>, Blake2bError> {
 
     hasher.input(data);
 
-    println!(
-        "DIGEST: out_len {} | output_bytes {} | output_bits {}",
-        out_len,
-        hasher.output_bytes(),
-        hasher.output_bits()
-    );
     let mut result = vec![0; hasher.output_bytes()];
 
     hasher.result(result.as_mut_slice());

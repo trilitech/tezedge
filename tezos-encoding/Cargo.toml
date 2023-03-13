@@ -1,9 +1,14 @@
 [package]
-name = "tezos_encoding"
-version = "3.1.1"
-authors = ["Tomas Sedlak <tomas.sedlak@simplestaking.com>"]
+name = "tezos_data_encoding"
+version = "4.0.0"
+authors = ["TriliTech <contact@trili.tech>"]
 edition = "2021"
 rust-version = "1.60"
+license = "MIT"
+keywords = ["tezos"]
+categories = ["encoding"]
+description = "Utilities for encoding/decoding data compatible with tezos data encoding."
+repository = "https://github.com/trilitech/tezedge.git"
 
 [dependencies]
 bit-vec = "0.6.2"
@@ -15,12 +20,10 @@ serde = { version = "1.0", features = ["derive"] }
 nom = "6.1"
 lazy_static = "1.4"
 # local dependencies
-crypto = { path = "../crypto", default-features = false }
-tezos_encoding_derive = { path = "../tezos-encoding-derive" }
-fuzzcheck = { git = "https://github.com/tezedge/fuzzcheck-rs.git", optional = true }
+tezos_crypto = { path = "../crypto", default-features = false }
+tezos_data_encoding_derive = { path = "../tezos-encoding-derive" }
 
 [features]
-fuzzing = ["fuzzcheck", "crypto/fuzzing", "tezos_encoding_derive/fuzzing"]
 
 [dev-dependencies]
 serde_json = "1.0"

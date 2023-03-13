@@ -3,23 +3,6 @@
 version = 3
 
 [[package]]
-name = "adler"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
-
-[[package]]
-name = "ahash"
-version = "0.7.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcb51a0695d8f838b1ee009b3fbf66bda078cd64590202a864a8f3e8c4315c47"
-dependencies = [
- "getrandom 0.2.8",
- "once_cell",
- "version_check",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -63,15 +46,6 @@ name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
-
-[[package]]
-name = "bincode"
-version = "1.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "bit-set"
@@ -156,45 +130,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "crc32fast"
-version = "1.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b540bd8bc810d3885c6ea91e2018302f68baba2129ab3e88f32389ee9370880d"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
 name = "crunchy"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
-
-[[package]]
-name = "crypto"
-version = "3.1.1"
-dependencies = [
- "anyhow",
- "base58",
- "blst",
- "byteorder",
- "cryptoxide",
- "ed25519-compact",
- "fuzzcheck",
- "hex",
- "libsecp256k1",
- "num-bigint",
- "num-traits",
- "p256",
- "proptest",
- "rand 0.7.3",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "thiserror",
- "zeroize",
-]
 
 [[package]]
 name = "crypto-bigint"
@@ -223,15 +162,6 @@ name = "cryptoxide"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "382ce8820a5bb815055d3553a610e8cb542b2d767bbacea99038afda96cd760d"
-
-[[package]]
-name = "decent-synquote-alternative"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cb1c933ca5ca726b7d4a5e1f60af8af3901642611fcfa927e80517d386f2fd9"
-dependencies = [
- "proc-macro2",
-]
 
 [[package]]
 name = "der"
@@ -328,17 +258,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "flate2"
-version = "1.0.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8a2db397cb1c8772f31494cb8917e48cd1e64f0fa7efac59fbd741a0a8ce841"
-dependencies = [
- "crc32fast",
- "libz-sys",
- "miniz_oxide",
-]
-
-[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -351,47 +270,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fed34cd105917e91daa4da6b3728c47b068749d6a62c59811f06ed2ac71d9da7"
 
 [[package]]
-name = "fuzzcheck"
-version = "0.10.1"
-source = "git+https://github.com/tezedge/fuzzcheck-rs.git#18c4e576d39153f8c4b2d24658ef5b20c15051d2"
-dependencies = [
- "ahash",
- "bincode",
- "bitflags",
- "cc",
- "cfg-if",
- "fastrand",
- "flate2",
- "fuzzcheck_common",
- "fuzzcheck_mutators_derive",
- "getopts",
- "libc",
- "md5",
- "nu-ansi-term",
- "object",
- "regex-syntax",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "fuzzcheck_common"
-version = "0.10.0"
-source = "git+https://github.com/tezedge/fuzzcheck-rs.git#18c4e576d39153f8c4b2d24658ef5b20c15051d2"
-dependencies = [
- "getopts",
-]
-
-[[package]]
-name = "fuzzcheck_mutators_derive"
-version = "0.10.0"
-source = "git+https://github.com/tezedge/fuzzcheck-rs.git#18c4e576d39153f8c4b2d24658ef5b20c15051d2"
-dependencies = [
- "decent-synquote-alternative",
- "proc-macro2",
-]
-
-[[package]]
 name = "generic-array"
 version = "0.14.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -399,15 +277,6 @@ checksum = "bff49e947297f3312447abdca79f45f4738097cc82b06e72054d2223f601f1b9"
 dependencies = [
  "typenum",
  "version_check",
-]
-
-[[package]]
-name = "getopts"
-version = "0.2.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14dbbfd5c71d70241ecf9e6f13737f7b5ce823821063188d7e46c41d371eebd5"
-dependencies = [
- "unicode-width",
 ]
 
 [[package]]
@@ -586,42 +455,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "libz-sys"
-version = "1.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9702761c3935f8cc2f101793272e202c72b99da8f4224a19ddcf1279a6450bbf"
-dependencies = [
- "cc",
- "pkg-config",
- "vcpkg",
-]
-
-[[package]]
 name = "linux-raw-sys"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
 
 [[package]]
-name = "md5"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
-
-[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
-
-[[package]]
-name = "miniz_oxide"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b275950c28b37e794e8c55d88aeb5e139d0ce23fdbbeda68f8d7174abdf9e8fa"
-dependencies = [
- "adler",
-]
 
 [[package]]
 name = "nom"
@@ -634,16 +477,6 @@ dependencies = [
  "lexical-core",
  "memchr",
  "version_check",
-]
-
-[[package]]
-name = "nu-ansi-term"
-version = "0.39.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e62e2187cbceeafee9fb7b5e5e182623e0628ebf430a479df4487beb8f92fd7a"
-dependencies = [
- "overload",
- "winapi",
 ]
 
 [[package]]
@@ -690,15 +523,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "object"
-version = "0.27.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67ac1d3f9a1d3616fd9a60c8d74296f22406a238b6a72f5cc1e6f314df4ffbf9"
-dependencies = [
- "memchr",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -709,12 +533,6 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
-
-[[package]]
-name = "overload"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 
 [[package]]
 name = "p256"
@@ -751,12 +569,6 @@ dependencies = [
  "regex-syntax",
  "syn",
 ]
-
-[[package]]
-name = "pkg-config"
-version = "0.3.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
 name = "ppv-lite86"
@@ -1086,12 +898,35 @@ dependencies = [
 ]
 
 [[package]]
-name = "tezos_encoding"
-version = "3.1.1"
+name = "tezos_crypto"
+version = "4.0.0"
+dependencies = [
+ "anyhow",
+ "base58",
+ "blst",
+ "byteorder",
+ "cryptoxide",
+ "ed25519-compact",
+ "hex",
+ "libsecp256k1",
+ "num-bigint",
+ "num-traits",
+ "p256",
+ "proptest",
+ "rand 0.7.3",
+ "serde",
+ "serde_json",
+ "strum",
+ "strum_macros",
+ "thiserror",
+ "zeroize",
+]
+
+[[package]]
+name = "tezos_data_encoding"
+version = "4.0.0"
 dependencies = [
  "bit-vec",
- "crypto",
- "fuzzcheck",
  "hex",
  "lazy_static",
  "nom",
@@ -1099,13 +934,14 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_json",
- "tezos_encoding_derive",
+ "tezos_crypto",
+ "tezos_data_encoding_derive",
  "thiserror",
 ]
 
 [[package]]
-name = "tezos_encoding_derive"
-version = "3.1.1"
+name = "tezos_data_encoding_derive"
+version = "4.0.0"
 dependencies = [
  "lazy_static",
  "once_cell",
@@ -1169,22 +1005,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1dd624098567895118886609431a7c3b8f516e41d30e0643f03d94592a147e36"
 
 [[package]]
-name = "unicode-width"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
-
-[[package]]
 name = "unicode-xid"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
-
-[[package]]
-name = "vcpkg"
-version = "0.2.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version_check"

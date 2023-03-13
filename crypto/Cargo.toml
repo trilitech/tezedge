@@ -1,9 +1,14 @@
 [package]
-name = "crypto"
-version = "3.1.1"
-authors = ["Tomas Sedlak <tomas.sedlak@simplestaking.com>"]
+name = "tezos_crypto"
+version = "4.0.0"
+authors = ["TriliTech <contact@trili.tech>"]
 edition = "2021"
 rust-version = "1.60"
+license = "MIT"
+keywords = ["tezos"]
+categories = ["cryptography::cryptocurrencies"]
+description = "Utilities for tezos-related cryptographic operations."
+repository = "https://github.com/trilitech/tezedge.git"
 
 [dependencies]
 anyhow = "1.0"
@@ -24,7 +29,6 @@ ed25519-compact = { version ="2.0", default-features = false }
 cryptoxide = { version = "0.4.4", default-features = false, features = ["sha2", "blake2"] }
 blst = "0.3.10"
 
-fuzzcheck = { git = "https://github.com/tezedge/fuzzcheck-rs.git", optional = true }
 proptest = { version = "1.1", optional = true }
 
 [dev-dependencies]
@@ -33,4 +37,3 @@ serde_json = "1.0"
 [features]
 default = ["std"]
 std = ["rand/std", "num-bigint/rand", "libsecp256k1/std", "p256/std", "proptest"]
-fuzzing = ["fuzzcheck"]

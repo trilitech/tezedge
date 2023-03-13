@@ -7,7 +7,7 @@
 use crypto::hash::{HashTrait, HashType};
 use std::collections::HashMap;
 
-pub use tezos_encoding_derive::HasEncoding;
+pub use tezos_data_encoding_derive::HasEncoding;
 
 #[derive(Debug, Clone)]
 pub struct Field {

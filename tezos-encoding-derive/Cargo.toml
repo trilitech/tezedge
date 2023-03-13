@@ -1,11 +1,15 @@
 [package]
-name = "tezos_encoding_derive"
-version = "3.1.1"
-authors = ["Alexander Koptelov <alexandre.koptelov@simplestaking.com>"]
+name = "tezos_data_encoding_derive"
+version = "4.0.0"
+authors = ["TriliTech <contact@trili.tech>"]
 edition = "2021"
 rust-version = "1.60"
+license = "MIT"
+keywords = ["tezos"]
+categories = ["encoding"]
+description = "Procedural macros for tezos_encoding."
+repository = "https://github.com/trilitech/tezedge.git"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 proc-macro = true
 
