@@ -1,5 +1,6 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
 // SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
+// SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
 use crate::encoding::*;
@@ -15,8 +16,8 @@ pub fn generate_encoding_for_data(
     let encoding = generate_encoding(&data.encoding);
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     quote_spanned! {data.name.span()=>
-        impl #impl_generics tezos_encoding::encoding::HasEncoding for #name #ty_generics #where_clause {
-            fn encoding() -> tezos_encoding::encoding::Encoding {
+        impl #impl_generics tezos_data_encoding::encoding::HasEncoding for #name #ty_generics #where_clause {
+            fn encoding() -> tezos_data_encoding::encoding::Encoding {
                 #encoding
             }
         }
@@ -25,11 +26,13 @@ pub fn generate_encoding_for_data(
 
 pub(crate) fn generate_encoding(encoding: &Encoding) -> TokenStream {
     match encoding {
-        Encoding::Unit => quote!(tezos_encoding::encoding::Encoding::Unit),
+        Encoding::Unit => quote!(tezos_data_encoding::encoding::Encoding::Unit),
         Encoding::Primitive(primitive, span) => generage_primitive_encoding(*primitive, *span),
-        Encoding::Bytes(span) => quote_spanned!(*span=> tezos_encoding::encoding::Encoding::Bytes),
+        Encoding::Bytes(span) => {
+            quote_spanned!(*span=> tezos_data_encoding::encoding::Encoding::Bytes)
+        }
         Encoding::Path(path) => {
-            quote_spanned!(path.span()=> #[allow(clippy::redundant_clone)]<#path as tezos_encoding::encoding::HasEncoding>::encoding().clone())
+            quote_spanned!(path.span()=> #[allow(clippy::redundant_clone)]<#path as tezos_data_encoding::encoding::HasEncoding>::encoding().clone())
         }
         Encoding::String(size, span) => generate_string_encoding(size, *span),
         Encoding::Struct(encoding) => generate_struct_encoding(encoding),
@@ -40,21 +43,25 @@ pub(crate) fn generate_encoding(encoding: &Encoding) -> TokenStream {
         Encoding::Bounded(size, encoding, span) => generate_bounded_encoding(size, encoding, *span),
         Encoding::ShortDynamic(encoding, span) => generate_short_dynamic_encoding(encoding, *span),
         Encoding::Dynamic(size, encoding, span) => generate_dynamic_encoding(size, encoding, *span),
-        Encoding::Zarith(span) => quote_spanned!(*span=> tezos_encoding::encoding::Encoding::Z),
-        Encoding::MuTez(span) => quote_spanned!(*span=> tezos_encoding::encoding::Encoding::Mutez),
+        Encoding::Zarith(span) => {
+            quote_spanned!(*span=> tezos_data_encoding::encoding::Encoding::Z)
+        }
+        Encoding::MuTez(span) => {
+            quote_spanned!(*span=> tezos_data_encoding::encoding::Encoding::Mutez)
+        }
     }
 }
 
 fn generage_primitive_encoding(kind: PrimitiveEncoding, span: Span) -> TokenStream {
     let ident = kind.make_ident(span);
-    quote_spanned!(ident.span()=> tezos_encoding::encoding::Encoding::#ident)
+    quote_spanned!(ident.span()=> tezos_data_encoding::encoding::Encoding::#ident)
 }
 
 fn generate_struct_encoding(encoding: &StructEncoding) -> TokenStream {
     let name_str = encoding.name.to_string();
     let fields_encoding = encoding.fields.iter().filter_map(generate_field_encoding);
     quote_spanned! { encoding.name.span()=>
-        tezos_encoding::encoding::Encoding::Obj(#name_str, vec![
+        tezos_data_encoding::encoding::Encoding::Obj(#name_str, vec![
             #(#fields_encoding),*
         ])
     }
@@ -65,7 +72,7 @@ fn generate_field_encoding(field: &FieldEncoding) -> Option<TokenStream> {
         let name = field.name.to_string();
         let encoding = generate_encoding(&encoding.encoding);
         Some(
-            quote_spanned!(field.name.span()=> tezos_encoding::encoding::Field::new(#name, #encoding)),
+            quote_spanned!(field.name.span()=> tezos_data_encoding::encoding::Field::new(#name, #encoding)),
         )
     } else {
         None
@@ -76,9 +83,9 @@ fn generate_enum_encoding(encoding: &EnumEncoding) -> TokenStream {
     let tag_type = &encoding.tag_type;
     let tags_encoding = encoding.tags.iter().map(generate_tag_encoding);
     quote_spanned! { tag_type.span()=>
-        tezos_encoding::encoding::Encoding::Tags(
+        tezos_data_encoding::encoding::Encoding::Tags(
             std::mem::size_of::<#tag_type>(),
-            tezos_encoding::encoding::TagMap::new(vec![
+            tezos_data_encoding::encoding::TagMap::new(vec![
                 #(#tags_encoding),*
             ])
         )
@@ -89,13 +96,13 @@ fn generate_tag_encoding(tag: &Tag) -> TokenStream {
     let id = &tag.id;
     let name = tag.name.to_string();
     let encoding = generate_encoding(&tag.encoding);
-    quote_spanned!(tag.name.span()=> tezos_encoding::encoding::Tag::new(#id, #name, #encoding))
+    quote_spanned!(tag.name.span()=> tezos_data_encoding::encoding::Tag::new(#id, #name, #encoding))
 }
 
 fn generate_string_encoding(size: &Option<syn::Expr>, span: Span) -> TokenStream {
     size.as_ref().map_or_else(
-        || quote_spanned!(span=> tezos_encoding::encoding::Encoding::String),
-        |size| quote_spanned!(span=> tezos_encoding::encoding::Encoding::BoundedString(#size)),
+        || quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::String),
+        |size| quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::BoundedString(#size)),
     )
 }
 
@@ -105,12 +112,12 @@ fn generate_list_encoding<'a>(
     span: Span,
 ) -> TokenStream {
     let encoding = generate_encoding(encoding);
-    size.as_ref().map_or_else(|| quote_spanned!(span=> tezos_encoding::encoding::Encoding::List(Box::new(#encoding))), |size| quote_spanned!(span=> tezos_encoding::encoding::Encoding::BoundedList(#size, Box::new(#encoding))))
+    size.as_ref().map_or_else(|| quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::List(Box::new(#encoding))), |size| quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::BoundedList(#size, Box::new(#encoding))))
 }
 
 fn generate_optional_field_encoding(encoding: &Encoding, span: Span) -> TokenStream {
     let encoding = generate_encoding(encoding);
-    quote_spanned!(span=> tezos_encoding::encoding::Encoding::OptionalField(Box::new(#encoding)))
+    quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::OptionalField(Box::new(#encoding)))
 }
 
 fn generate_sized_encoding<'a>(
@@ -119,7 +126,7 @@ fn generate_sized_encoding<'a>(
     span: Span,
 ) -> TokenStream {
     let encoding = generate_encoding(encoding);
-    quote_spanned!(span=> tezos_encoding::encoding::Encoding::Sized(#size, Box::new(#encoding)))
+    quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::Sized(#size, Box::new(#encoding)))
 }
 
 fn generate_bounded_encoding<'a>(
@@ -128,12 +135,12 @@ fn generate_bounded_encoding<'a>(
     span: Span,
 ) -> TokenStream {
     let encoding = generate_encoding(encoding);
-    quote_spanned!(span=> tezos_encoding::encoding::Encoding::Bounded(#size, Box::new(#encoding)))
+    quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::Bounded(#size, Box::new(#encoding)))
 }
 
 fn generate_short_dynamic_encoding(encoding: &Encoding, span: Span) -> TokenStream {
     let encoding = generate_encoding(encoding);
-    quote_spanned!(span=> tezos_encoding::encoding::Encoding::ShortDynamic(Box::new(#encoding)))
+    quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::ShortDynamic(Box::new(#encoding)))
 }
 
 fn generate_dynamic_encoding<'a>(
@@ -143,6 +150,6 @@ fn generate_dynamic_encoding<'a>(
 ) -> TokenStream {
     let encoding = generate_encoding(encoding);
     size.as_ref().map_or_else(
-        || quote_spanned!(span=> tezos_encoding::encoding::Encoding::Dynamic(Box::new(#encoding))),
-        |size| quote_spanned!(span=> tezos_encoding::encoding::Encoding::BoundedDynamic(#size, Box::new(#encoding))))
+        || quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::Dynamic(Box::new(#encoding))),
+        |size| quote_spanned!(span=> tezos_data_encoding::encoding::Encoding::BoundedDynamic(#size, Box::new(#encoding))))
 }

@@ -1,5 +1,4 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
-// SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
 use proc_macro2::Span;

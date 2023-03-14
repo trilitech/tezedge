@@ -1,7 +1,13 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
 // SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
+// SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 #![forbid(unsafe_code)]
+
+//! Automatic derivation of data encodings for rust structures.
+//!
+//! Rather than manually implementing the `NomReader` and `BinWriter` traits, you can
+//! annotate your structures directly.
 
 extern crate proc_macro;
 
@@ -16,7 +22,7 @@ mod nom;
 mod symbol;
 
 #[proc_macro_derive(HasEncoding, attributes(encoding))]
-pub fn derive_tezos_encoding(input: TokenStream) -> TokenStream {
+pub fn derive_tezos_data_encoding(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let encoding = match crate::make::make_encoding(&input) {
         Ok(encoding) => encoding,
