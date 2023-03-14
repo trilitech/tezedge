@@ -33,6 +33,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Nothing.
 
+## [0.4.4] - 2023-03-16
+
+### Fixed
+
+- `tezos_data_encoding_derive` was outputting code that referenced the old `tezos_encoding` crate. It now references `tezos_data_encoding`.
+
 ## [0.4.3] - 2023-03-14
 
 ## [0.4.2] - 2023-03-14
