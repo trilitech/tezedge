@@ -1,5 +1,6 @@
 // Copyright (c) SimpleStaking and Tezedge Contributors
 // SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
+// SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
 use crate::encoding::*;
@@ -19,8 +20,8 @@ pub fn generate_bin_write_for_data(
         #[allow(unused_parens)]
         #[allow(clippy::unnecessary_cast)]
         #[allow(clippy::redundant_closure_call)]
-        impl #impl_generics tezos_encoding::enc::BinWriter for #name #ty_generics #where_clause {
-            fn bin_write(&self, out: &mut Vec<u8>) -> tezos_encoding::enc::BinResult {
+        impl #impl_generics tezos_data_encoding::enc::BinWriter for #name #ty_generics #where_clause {
+            fn bin_write(&self, out: &mut Vec<u8>) -> tezos_data_encoding::enc::BinResult {
                 #bin_write(self, out)
             }
         }
@@ -33,7 +34,7 @@ fn generate_bin_write(encoding: &Encoding) -> TokenStream {
         Encoding::Primitive(primitive, span) => generage_primitive_bin_write(*primitive, *span),
         Encoding::Bytes(span) => generate_bytes_bin_write(*span),
         Encoding::Path(path) => {
-            quote_spanned!(path.span()=> <#path as tezos_encoding::enc::BinWriter>::bin_write)
+            quote_spanned!(path.span()=> <#path as tezos_data_encoding::enc::BinWriter>::bin_write)
         }
         Encoding::Struct(encoding) => generate_struct_bin_write(encoding),
         Encoding::Enum(encoding) => generate_enum_bin_write(encoding),
@@ -48,13 +49,13 @@ fn generate_bin_write(encoding: &Encoding) -> TokenStream {
         Encoding::Dynamic(size, encoding, span) => {
             generate_dynamic_bin_write(size, encoding, *span)
         }
-        Encoding::Zarith(span) => quote_spanned!(*span=> tezos_encoding::enc::zarith),
-        Encoding::MuTez(span) => quote_spanned!(*span=> tezos_encoding::enc::mutez),
+        Encoding::Zarith(span) => quote_spanned!(*span=> tezos_data_encoding::enc::zarith),
+        Encoding::MuTez(span) => quote_spanned!(*span=> tezos_data_encoding::enc::mutez),
     }
 }
 
 fn generate_bytes_bin_write(span: Span) -> TokenStream {
-    quote_spanned!(span=> tezos_encoding::enc::bytes)
+    quote_spanned!(span=> tezos_data_encoding::enc::bytes)
 }
 
 fn generage_primitive_bin_write(kind: PrimitiveEncoding, span: Span) -> TokenStream {
@@ -71,13 +72,13 @@ fn generage_primitive_bin_write(kind: PrimitiveEncoding, span: Span) -> TokenStr
         | PrimitiveEncoding::Timestamp => {
             generate_number_bin_write(get_primitive_number_mapping(kind).unwrap(), span)
         }
-        PrimitiveEncoding::Bool => quote_spanned!(span=> tezos_encoding::enc::boolean),
+        PrimitiveEncoding::Bool => quote_spanned!(span=> tezos_data_encoding::enc::boolean),
     }
 }
 
 fn generate_number_bin_write(num: &str, span: Span) -> TokenStream {
     let ty = syn::Ident::new(num, span);
-    quote_spanned!(span=> tezos_encoding::enc::#ty)
+    quote_spanned!(span=> tezos_data_encoding::enc::#ty)
 }
 
 fn generate_struct_bin_write(encoding: &StructEncoding) -> TokenStream {
@@ -92,7 +93,7 @@ fn generate_struct_bin_write(encoding: &StructEncoding) -> TokenStream {
         encoding.name.span()=>
             (|data: &Self, out: &mut Vec<u8>| {
                 #(
-                    tezos_encoding::enc::field(#field_name, #field_bin_write)(&data.#field, out)?;
+                    tezos_data_encoding::enc::field(#field_name, #field_bin_write)(&data.#field, out)?;
                 )*
                 Ok(())
             })
@@ -105,7 +106,8 @@ fn generate_struct_field_bin_write(encoding: &Encoding) -> TokenStream {
 
 fn generate_enum_bin_write(encoding: &EnumEncoding) -> TokenStream {
     let tag_type = &encoding.tag_type;
-    let tag_serialize = quote_spanned!(encoding.tag_type.span()=> tezos_encoding::enc::#tag_type);
+    let tag_serialize =
+        quote_spanned!(encoding.tag_type.span()=> tezos_data_encoding::enc::#tag_type);
     let tags_bin_write = encoding
         .tags
         .iter()
@@ -131,13 +133,13 @@ fn generate_tag_bin_write<'a>(
     match &tag.encoding {
         Encoding::Unit => {
             quote_spanned!(tag_name.span()=>
-                           #enum_name::#tag_name => tezos_encoding::enc::variant(#name, #tag_encoding)(&#tag_id, out)
+                           #enum_name::#tag_name => tezos_data_encoding::enc::variant(#name, #tag_encoding)(&#tag_id, out)
             )
         }
         encoding => {
             let bin_write = generate_bin_write(encoding);
             quote_spanned!(tag_name.span()=>
-                           #enum_name::#tag_name(inner) => tezos_encoding::enc::variant_with_field(#name, #tag_encoding, #bin_write)(&#tag_id, inner, out)
+                           #enum_name::#tag_name(inner) => tezos_data_encoding::enc::variant_with_field(#name, #tag_encoding, #bin_write)(&#tag_id, inner, out)
             )
         }
     }
@@ -145,14 +147,14 @@ fn generate_tag_bin_write<'a>(
 
 fn generate_string_bin_write(size: &Option<syn::Expr>, span: Span) -> TokenStream {
     size.as_ref().map_or_else(
-        || quote_spanned!(span=> tezos_encoding::enc::string),
-        |size| quote_spanned!(span=> tezos_encoding::enc::bounded_string(#size)),
+        || quote_spanned!(span=> tezos_data_encoding::enc::string),
+        |size| quote_spanned!(span=> tezos_data_encoding::enc::bounded_string(#size)),
     )
 }
 
 fn generate_optional_field_bin_write(encoding: &Encoding, span: Span) -> TokenStream {
     let bin_write = generate_bin_write(encoding);
-    quote_spanned!(span=> tezos_encoding::enc::optional_field(#bin_write))
+    quote_spanned!(span=> tezos_data_encoding::enc::optional_field(#bin_write))
 }
 
 fn generate_list_bin_write(
@@ -162,24 +164,24 @@ fn generate_list_bin_write(
 ) -> TokenStream {
     let bin_write = generate_bin_write(encoding);
     size.as_ref().map_or_else(
-        || quote_spanned!(span=> tezos_encoding::enc::list(#bin_write)),
-        |size| quote_spanned!(span=> tezos_encoding::enc::bounded_list(#size, #bin_write)),
+        || quote_spanned!(span=> tezos_data_encoding::enc::list(#bin_write)),
+        |size| quote_spanned!(span=> tezos_data_encoding::enc::bounded_list(#size, #bin_write)),
     )
 }
 
 fn generate_sized_bin_write(size: &syn::Expr, encoding: &Encoding, span: Span) -> TokenStream {
     let bin_write = generate_bin_write(encoding);
-    quote_spanned!(span=> tezos_encoding::enc::sized(#size, #bin_write))
+    quote_spanned!(span=> tezos_data_encoding::enc::sized(#size, #bin_write))
 }
 
 fn generate_bounded_bin_write(size: &syn::Expr, encoding: &Encoding, span: Span) -> TokenStream {
     let bin_write = generate_bin_write(encoding);
-    quote_spanned!(span=> tezos_encoding::enc::bounded(#size, #bin_write))
+    quote_spanned!(span=> tezos_data_encoding::enc::bounded(#size, #bin_write))
 }
 
 fn generate_short_dynamic_bin_write(encoding: &Encoding, span: Span) -> TokenStream {
     let bin_write = generate_bin_write(encoding);
-    quote_spanned!(span=> tezos_encoding::enc::short_dynamic(#bin_write))
+    quote_spanned!(span=> tezos_data_encoding::enc::short_dynamic(#bin_write))
 }
 
 fn generate_dynamic_bin_write(
@@ -189,7 +191,7 @@ fn generate_dynamic_bin_write(
 ) -> TokenStream {
     let bin_write = generate_bin_write(encoding);
     size.as_ref().map_or_else(
-        || quote_spanned!(span=> tezos_encoding::enc::dynamic(#bin_write)),
-        |size| quote_spanned!(span=> tezos_encoding::enc::bounded_dynamic(#size, #bin_write)),
+        || quote_spanned!(span=> tezos_data_encoding::enc::dynamic(#bin_write)),
+        |size| quote_spanned!(span=> tezos_data_encoding::enc::bounded_dynamic(#size, #bin_write)),
     )
 }
