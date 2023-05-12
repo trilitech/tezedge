@@ -1,6 +1,6 @@
 [package]
 name = "tezos_crypto_rs"
-version = "0.4.4"
+version = "0.5.0"
 authors = ["TriliTech <contact@trili.tech>"]
 edition = "2021"
 rust-version = "1.60"

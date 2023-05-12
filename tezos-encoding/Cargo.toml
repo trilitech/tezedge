@@ -1,6 +1,6 @@
 [package]
 name = "tezos_data_encoding"
-version = "0.4.4"
+version = "0.5.0"
 authors = ["TriliTech <contact@trili.tech>"]
 edition = "2021"
 rust-version = "1.60"
@@ -17,17 +17,18 @@ hex = "0.4"
 num-bigint = "0.3"
 num-traits = "0.2.8"
 serde = { version = "1.0", features = ["derive"] }
-nom = "6.1"
+nom = "7.1"
+bitvec = "1.0"
 lazy_static = "1.4"
 
 [dependencies.tezos_crypto_rs]
 path = "../crypto"
-version = "0.4.4"
+version = "0.5.0"
 default-features = false
 
 [dependencies.tezos_data_encoding_derive]
 path = "../tezos-encoding-derive"
-version = "0.4.4"
+version = "0.5.0"
 
 [features]
 

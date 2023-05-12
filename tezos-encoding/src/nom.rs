@@ -2,9 +2,10 @@
 // SPDX-CopyrightText: 2022-2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
+use bitvec::slice::BitSlice;
+use bitvec::{bitvec, order::Msb0, view::BitView};
 use crypto::hash::HashTrait;
 use nom::{
-    bitvec::{bitvec, order::Msb0, view::BitView},
     branch::*,
     bytes::complete::*,
     combinator::*,
@@ -389,7 +390,7 @@ where
             0,
             max,
             |i| f.parse(i),
-            Vec::new(),
+            Vec::new,
             |mut list, item| {
                 list.push(item);
                 list
@@ -512,7 +513,7 @@ where
 }
 
 pub fn z_bignum(mut input: NomInput) -> NomResult<BigInt> {
-    let mut bitslice_vec = Vec::new();
+    let mut bitslice_vec: Vec<&BitSlice<u8, Msb0>> = Vec::new();
     let mut has_next = true;
     let mut missing_bits = 0;
     let mut first = true;
@@ -532,7 +533,7 @@ pub fn z_bignum(mut input: NomInput) -> NomResult<BigInt> {
         bitslice_vec.push(&bits[skip_bits..]);
         missing_bits += skip_bits;
     }
-    let mut bitvec = bitvec![Msb0, u8; 0; missing_bits % 8];
+    let mut bitvec = bitvec![u8, Msb0; 0; missing_bits % 8];
     for bitslice in bitslice_vec.into_iter().rev() {
         bitvec.extend_from_bitslice(bitslice);
     }
@@ -541,7 +542,7 @@ pub fn z_bignum(mut input: NomInput) -> NomResult<BigInt> {
 }
 
 pub fn n_bignum(mut input: NomInput) -> NomResult<BigUint> {
-    let mut bitslice_vec = Vec::new();
+    let mut bitslice_vec: Vec<&BitSlice<u8, Msb0>> = Vec::new();
     let mut has_next = true;
     let mut missing_bits = 0;
     while has_next {
@@ -552,7 +553,7 @@ pub fn n_bignum(mut input: NomInput) -> NomResult<BigUint> {
         bitslice_vec.push(&bits[1..]);
         missing_bits += 1;
     }
-    let mut bitvec = bitvec![Msb0, u8; 0; missing_bits % 8];
+    let mut bitvec = bitvec![u8, Msb0; 0; missing_bits % 8];
     for bitslice in bitslice_vec.into_iter().rev() {
         bitvec.extend_from_bitslice(bitslice);
     }

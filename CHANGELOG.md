@@ -11,8 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Ed25519 implementation switched from `ed25519_compact` to `ed25519-dalek`.
-- `PublicKeyEd25519::sign` no longer takes an `Iterator`, instead only one `AsRef<u8>` is allowed.
+- Nothing.
 
 ### Deprecated
 
@@ -33,6 +32,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Performance
 
 - Nothing.
+
+## [0.5.0] - 2023-05-12
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- Ed25519 implementation switched from `ed25519_compact` to `ed25519-dalek`.
+- `PublicKeyEd25519::sign` no longer takes an `Iterator`, instead only one `AsRef<u8>` is allowed.
+- Depencies bumped, including `nom` -> `7.1`.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- `tezos_crypto_rs`: errors no longer implement `PartialEq`, `Clone`.
+- `tezos_crypto_rs`: errors no longer are (de)serializable with serde.
+
+### Fixed
+
+- Nothing.
+
+### Security
+
+- Nothing.
+
+### Performance
+
+- Improvements in verification of `tz1` signatures, due to change in Ed25519 backend.
 
 ## [0.4.4] - 2023-03-16
 
