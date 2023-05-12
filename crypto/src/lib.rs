@@ -13,7 +13,7 @@ pub mod bls;
 #[macro_use]
 pub mod hash;
 
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, Error)]
 pub enum CryptoError {
     #[error("Invalid crypto key, reason: {reason}")]
     InvalidKey { reason: String },
@@ -33,6 +33,8 @@ pub enum CryptoError {
     Unsupported(&'static str),
     #[error("Algorithm error: `{0}`")]
     AlgorithmError(String),
+    #[error("Ed25519 error: {0}")]
+    Ed25519(ed25519_dalek::SignatureError),
 }
 
 /// Public key that support hashing.

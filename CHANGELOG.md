@@ -11,7 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Nothing.
+- Ed25519 implementation switched from `ed25519_compact` to `ed25519-dalek`.
+- `PublicKeyEd25519::sign` no longer takes an `Iterator`, instead only one `AsRef<u8>` is allowed.
 
 ### Deprecated
 
