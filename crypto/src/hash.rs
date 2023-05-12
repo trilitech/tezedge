@@ -68,11 +68,14 @@ pub trait HashTrait: Into<Hash> + AsRef<Hash> {
 
 /// Error creating hash from bytes
 #[cfg_attr(feature = "fuzzing", derive(fuzzcheck::DefaultMutator))]
-#[derive(Debug, Error, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Error)]
 pub enum FromBytesError {
     /// Invalid data size
     #[error("invalid hash size")]
     InvalidSize,
+    /// Ed25519 decrompression
+    #[error("From bytes ed25519: {0:?}")]
+    Ed25519(ed25519_dalek::SignatureError),
 }
 
 macro_rules! define_hash {
@@ -502,7 +505,7 @@ pub fn chain_id_from_block_hash(block_hash: &BlockHash) -> Result<ChainId, Blake
 }
 
 #[cfg_attr(feature = "fuzzing", derive(fuzzcheck::DefaultMutator))]
-#[derive(Debug, Clone, Error, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Error)]
 pub enum TryFromPKError {
     #[error("Error calculating digest")]
     Digest(#[from] Blake2bError),
@@ -570,39 +573,43 @@ impl TryFrom<PublicKeyBls> for ContractTz4Hash {
     }
 }
 
-impl TryFrom<&PublicKeyEd25519> for ed25519_compact::PublicKey {
+impl TryFrom<&PublicKeyEd25519> for ed25519_dalek::VerifyingKey {
     type Error = FromBytesError;
 
     fn try_from(source: &PublicKeyEd25519) -> Result<Self, Self::Error> {
-        source
+        let bytes: [u8; 32] = source
             .0
             .as_slice()
             .try_into()
-            .map(ed25519_compact::PublicKey::new)
-            .map_err(|_| FromBytesError::InvalidSize)
+            .map_err(|_| FromBytesError::InvalidSize)?;
+
+        ed25519_dalek::VerifyingKey::from_bytes(&bytes).map_err(FromBytesError::Ed25519)
     }
 }
 
 impl SeedEd25519 {
     pub fn keypair(self) -> Result<(PublicKeyEd25519, SecretKeyEd25519), CryptoError> {
-        use ed25519_compact::{KeyPair, Seed};
+        use ed25519_dalek::{SecretKey, SigningKey};
 
         let mut v = self.0;
-        let seed_bytes = v
-            .as_slice()
-            .try_into()
-            .map_err(|_| CryptoError::InvalidKeySize {
-                expected: Seed::BYTES,
-                actual: v.len(),
-            })?;
+        let secret_key: SecretKey =
+            v.as_slice()
+                .try_into()
+                .map_err(|_| CryptoError::InvalidKeySize {
+                    expected: ed25519_dalek::SECRET_KEY_LENGTH,
+                    actual: v.len(),
+                })?;
         v.zeroize();
-        let seed = Seed::new(seed_bytes);
-        let KeyPair { pk, sk } = KeyPair::from_seed(seed);
-        Ok((PublicKeyEd25519(pk.to_vec()), SecretKeyEd25519(sk.to_vec())))
+        let sk = SigningKey::from_bytes(&secret_key);
+        let pk = sk.verifying_key();
+        Ok((
+            PublicKeyEd25519(pk.to_bytes().to_vec()),
+            SecretKeyEd25519(sk.to_bytes().to_vec()),
+        ))
     }
 }
 
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, Error)]
 pub enum PublicKeyError {
     #[error("Error constructing hash: {0}")]
     HashError(#[from] FromBytesError),
@@ -619,42 +626,25 @@ impl PublicKeyEd25519 {
 }
 
 impl SecretKeyEd25519 {
-    pub fn sign<T, I>(&self, data: T) -> Result<Signature, CryptoError>
+    pub fn sign<I>(&self, data: I) -> Result<Signature, CryptoError>
     where
-        T: IntoIterator<Item = I>,
         I: AsRef<[u8]>,
     {
-        use ed25519_compact::SecretKey;
+        use ed25519_dalek::Signer;
+        use ed25519_dalek::SigningKey;
 
         let sk = self
             .0
             .as_slice()
             .try_into()
-            .map(SecretKey::new)
+            .map(SigningKey::from_bytes)
             .map_err(|_| CryptoError::InvalidKeySize {
-                expected: SecretKey::BYTES,
+                expected: ed25519_dalek::SECRET_KEY_LENGTH,
                 actual: self.0.len(),
             })?;
 
-        let digest = blake2b::digest_all(data, 32).map_err(|_| CryptoError::InvalidMessage)?;
-        let signature = sk.sign(&digest, None);
-        Ok(Signature(signature.to_vec()))
-    }
-}
-
-fn convert_ed25519_err(e: ed25519_compact::Error) -> Result<bool, CryptoError> {
-    use ed25519_compact::Error::*;
-    match e {
-        SignatureMismatch => Ok(false),
-        InvalidPublicKey => Err(CryptoError::InvalidPublicKey),
-        WeakPublicKey => Err(CryptoError::Unsupported("ed25519: WeakPublicKey")),
-        InvalidSecretKey => Err(CryptoError::Unsupported("ed25519: InvalidSecretKey")),
-        InvalidSignature => Err(CryptoError::InvalidSignature),
-        InvalidSeed => Err(CryptoError::Unsupported("ed25519: InvalidSeed")),
-        InvalidBlind => Err(CryptoError::Unsupported("ed25519: InvalidBlind")),
-        InvalidNoise => Err(CryptoError::Unsupported("ed25519: InvalidNoise")),
-        ParseError => Err(CryptoError::Unsupported("ed25519: ParseError")),
-        NonCanonical => Err(CryptoError::Unsupported("ed25519: NonCanonical")),
+        let signature = sk.sign(data.as_ref());
+        Ok(Signature(signature.to_bytes().to_vec()))
     }
 }
 
@@ -668,18 +658,16 @@ impl PublicKeySignatureVerifier for PublicKeyEd25519 {
             .0
             .as_slice()
             .try_into()
-            .map(ed25519_compact::Signature::new)
+            .map(ed25519_dalek::Signature::from_bytes)
             .map_err(|_| CryptoError::InvalidSignature)?;
 
-        let pk: ed25519_compact::PublicKey = self
-            .0
-            .as_slice()
-            .try_into()
-            .map(ed25519_compact::PublicKey::new)
+        let pk = ed25519_dalek::VerifyingKey::try_from(self)
             .map_err(|_| CryptoError::InvalidPublicKey)?;
 
-        pk.verify(bytes, &signature)
-            .map_or_else(convert_ed25519_err, |()| Ok(true))
+        pk.verify_strict(bytes, &signature)
+            .map_err(CryptoError::Ed25519)?;
+
+        Ok(true)
     }
 }
 
@@ -1109,6 +1097,21 @@ mod tests {
 
         let result = pk.verify_signature(&sig, &msg).unwrap();
         assert!(result);
+    }
+
+    use proptest::prelude::*;
+    proptest! {
+        #[test]
+        fn test_ed255519_signature_verification_roundtrip(seed in any::<[u8; 32]>(), message in any::<Vec<u8>>()) {
+            let seed = super::SeedEd25519(seed.to_vec());
+
+            let (pk, sk) = seed.keypair().unwrap();
+
+            let sig = sk.sign(&message).unwrap();
+
+            let result = pk.verify_signature(&sig, &message).unwrap();
+            assert!(result);
+        }
     }
 
     #[test]

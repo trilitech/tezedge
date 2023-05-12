@@ -253,7 +253,7 @@ mod tests {
         let sig = BlsSignature(bytes.to_vec());
         let sig = min_pk::Signature::try_from(&sig);
 
-        assert_eq!(sig, Err(CryptoError::InvalidSignature));
+        assert!(matches!(sig, Err(CryptoError::InvalidSignature)));
     }
 
     #[test]
@@ -286,7 +286,7 @@ mod tests {
         let pk = PublicKeyBls(bytes.to_vec());
         let pk = min_pk::PublicKey::try_from(&pk);
 
-        assert_eq!(pk, Err(CryptoError::InvalidPublicKey));
+        assert!(matches!(pk, Err(CryptoError::InvalidPublicKey)));
     }
 
     #[test]
@@ -328,7 +328,7 @@ mod tests {
         let msg_keys = [(&msg[..], &pk)];
         let res = sig.aggregate_verify(&mut msg_keys.into_iter());
 
-        assert_eq!(res, Ok(true));
+        assert!(matches!(res, Ok(true)));
     }
 
     // Values taken from tezt test, that was failing due to public key not being
@@ -409,7 +409,7 @@ mod tests {
         let msg_keys = [(&msg[..], &pk)];
         let res = sig.aggregate_verify(&mut msg_keys.into_iter());
 
-        assert_eq!(res, Ok(false));
+        assert!(matches!(res, Ok(false)));
     }
 
     // Test to ensure that we use the correct hashing scheme to convert between
@@ -463,7 +463,7 @@ mod tests {
 
           let res = sig.aggregate_verify(&mut msg_keys.into_iter());
 
-          assert_eq!(res, Ok(true));
+          assert!(matches!(res, Ok(true)));
       }
 
       #[test]
@@ -490,7 +490,7 @@ mod tests {
 
           let res = sig.aggregate_verify(&mut msg_keys.into_iter());
 
-          assert_eq!(res, Ok(true));
+          assert!(matches!(res, Ok(true)));
       }
 
       #[test]
@@ -505,7 +505,7 @@ mod tests {
 
           let res = sig.aggregate_verify(&mut msg_keys.into_iter());
 
-          assert_eq!(res, Ok(false));
+          assert!(matches!(res, Ok(false)));
       }
     }
 }
