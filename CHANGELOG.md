@@ -33,6 +33,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Nothing.
 
+## [0.5.1] - 2023-09-01
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- Fixed the version of `blst` to 0.3.10
+
 ## [0.5.0] - 2023-05-12
 
 ### Added
