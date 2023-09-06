@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - name: dry-run (crypto)
-        run: cargo publish --dry-run -p tezos_crypto
+        run: cargo publish --dry-run -p tezos_crypto_rs
       - name: publish (crypto)
         run: cargo publish -p tezos_crypto_rs --token ${CRATES_TOKEN}
         env:
@@ -33,6 +33,7 @@ jobs:
   publish-encoding:
     runs-on: ubuntu-latest
     needs: [publish-crypto, publish-derive]
+    if: always()
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
