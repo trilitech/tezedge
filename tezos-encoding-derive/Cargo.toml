@@ -1,6 +1,6 @@
 [package]
 name = "tezos_data_encoding_derive"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["TriliTech <contact@trili.tech>"]
 edition = "2021"
 rust-version = "1.60"
