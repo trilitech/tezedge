@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@1.61.0
+      - uses: dtolnay/rust-toolchain@stable
       - name: dry-run (crypto)
         run: cargo publish --dry-run -p tezos_crypto
       - name: publish (crypto)
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@1.60.0
+      - uses: dtolnay/rust-toolchain@stable
       - name: dry-run (derive)
         run: cargo publish --dry-run -p tezos_data_encoding_derive
       - name: publish (derive)
@@ -35,7 +35,7 @@ jobs:
     needs: [publish-crypto, publish-derive]
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@1.60.0
+      - uses: dtolnay/rust-toolchain@stable
       - name: dry-run (encoding)
         run: cargo publish --dry-run -p tezos_data_encoding
       - name: publish (encoding)
