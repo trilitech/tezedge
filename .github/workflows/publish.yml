@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@1.60.0
+      - uses: dtolnay/rust-toolchain@1.61.0
       - name: dry-run (crypto)
         run: cargo publish --dry-run -p tezos_crypto
       - name: publish (crypto)
