@@ -292,7 +292,7 @@ impl<'de, const SIZE: usize> Deserialize<'de> for SizedBytes<SIZE> {
     }
 }
 
-impl<const SIZE: usize> NomReader for SizedBytes<SIZE> {
+impl<'a, const SIZE: usize> NomReader<'a> for SizedBytes<SIZE> {
     fn nom_read(input: &[u8]) -> crate::nom::NomResult<Self> {
         use crate::nom;
         let (input, slice) = nom::sized(SIZE, nom::bytes)(input)?;
@@ -387,7 +387,7 @@ impl HasEncoding for Bytes {
     }
 }
 
-impl NomReader for Bytes {
+impl<'a> NomReader<'a> for Bytes {
     fn nom_read(input: &[u8]) -> crate::nom::NomResult<Self> {
         use crate::nom::bytes;
         let (input, b) = bytes(input)?;

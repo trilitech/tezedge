@@ -29,7 +29,7 @@
 //!
 //! #[derive(Debug, PartialEq, HasEncoding, NomReader, BinWriter)]
 //! struct Outer<T>
-//! where T: Debug + PartialEq + HasEncoding + NomReader + BinWriter {
+//! where T: Debug + PartialEq + HasEncoding + for<'a> NomReader<'a> + BinWriter {
 //!   #[encoding(dynamic)]
 //!   dynamic_size: Vec<T>
 //! }

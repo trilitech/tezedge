@@ -8,6 +8,7 @@ use once_cell::sync::Lazy as SyncLazy;
 use crate::encoding::*;
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned};
+use syn::parse_quote;
 use syn::spanned::Spanned;
 
 const NOM_TUPLE_MAX: usize = 26;
@@ -18,14 +19,21 @@ pub fn generate_nom_read_for_data(
 ) -> TokenStream {
     let name = data.name;
     let nom_read = generate_nom_read(&data.encoding);
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    // We want to derive NomReader<'a> for a fresh 'a.  To do this we
+    // use a mix of the solutions proposed in
+    // https://github.com/dtolnay/syn/issues/90
+    let a: syn::GenericParam = parse_quote!('_a);
+    let mut extended_generics = generics.clone();
+    extended_generics.params.push(a.clone());
+    let (impl_generics, _, _) = extended_generics.split_for_impl();
+    let (_, ty_generics, where_clause) = generics.split_for_impl();
     quote_spanned! {
         data.name.span()=>
         #[allow(unused_parens)]
         #[allow(clippy::unnecessary_cast)]
         #[allow(clippy::redundant_closure_call)]
-        impl #impl_generics tezos_data_encoding::nom::NomReader for #name #ty_generics #where_clause {
-            fn nom_read(bytes: &[u8]) -> tezos_data_encoding::nom::NomResult<Self> {
+        impl #impl_generics tezos_data_encoding::nom::NomReader<#a> for #name #ty_generics #where_clause {
+            fn nom_read(bytes: &#a [u8]) -> tezos_data_encoding::nom::NomResult<#a, Self> {
                 #nom_read(bytes)
             }
         }
