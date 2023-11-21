@@ -2,8 +2,8 @@ name: publish
 
 on:
   push:
-    tags:        
-      - '*'  
+    tags:
+      - '*'
 
 jobs:
   publish-crypto:
