@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Added `bls` feature flag to allow disabling dependency on `blst`
+- Nothing.
 
 ### Changed
 
@@ -32,6 +32,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Performance
 
 - Nothing.
+
+## [0.5.2] - 2023-11-21
+
+### Added
+
+- Added `bls` feature flag to `tezos_crypto_rs`, to allow disabling dependency on `blst`.
 
 ## [0.5.1] - 2023-09-01
 
