@@ -30,7 +30,7 @@ default-features = false
 path = "../tezos-encoding-derive"
 version = "0.5.1"
 
-[features]
-
 [dev-dependencies]
 serde_json = "1.0"
+
+[features]

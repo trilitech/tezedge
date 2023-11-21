@@ -1,5 +1,6 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
 // SPDX-CopyrightText: 2023 TriliTech <contact@trili.tech>
+// SPDX-CopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
 // SPDX-License-Identifier: MIT
 #![forbid(unsafe_code)]
 #![cfg_attr(feature = "fuzzing", feature(no_coverage))]
@@ -9,6 +10,7 @@ use thiserror::Error;
 #[macro_use]
 pub mod blake2b;
 pub mod base58;
+#[cfg(feature = "bls")]
 pub mod bls;
 #[macro_use]
 pub mod hash;

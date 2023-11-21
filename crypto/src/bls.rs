@@ -1,8 +1,11 @@
 // SPDX-FileCopyrightText: 2022-2023 TriliTech <contact@trili.tech>
+// SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
 //
 // SPDX-License-Identifier: MIT
 
 //! BLS support (min_pk).
+
+#![cfg(feature = "bls")]
 
 use crate::hash::BlsSignature;
 use crate::hash::ContractTz4Hash;
