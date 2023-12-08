@@ -226,13 +226,13 @@ pub type NomError<'a> = error::DecodeError<NomInput<'a>>;
 pub type NomResult<'a, T> = nom::IResult<NomInput<'a>, T, NomError<'a>>;
 
 /// Traits defining message decoding using `nom` primitives.
-pub trait NomReader: Sized {
-    fn nom_read(input: &[u8]) -> NomResult<Self>;
+pub trait NomReader<'a>: Sized {
+    fn nom_read(input: &'a [u8]) -> NomResult<'a, Self>;
 }
 
 macro_rules! hash_nom_reader {
     ($hash_name:ident) => {
-        impl NomReader for crypto::hash::$hash_name {
+        impl<'a> NomReader<'a> for crypto::hash::$hash_name {
             #[inline(always)]
             fn nom_read(input: &[u8]) -> NomResult<Self> {
                 map(take(Self::hash_size()), |bytes| {
@@ -270,13 +270,13 @@ hash_nom_reader!(BlsSignature);
 hash_nom_reader!(NonceHash);
 hash_nom_reader!(SmartRollupHash);
 
-impl NomReader for Zarith {
+impl<'a> NomReader<'a> for Zarith {
     fn nom_read(bytes: &[u8]) -> NomResult<Self> {
         map(z_bignum, |big_int| big_int.into())(bytes)
     }
 }
 
-impl NomReader for Mutez {
+impl<'a> NomReader<'a> for Mutez {
     fn nom_read(bytes: &[u8]) -> NomResult<Self> {
         map(n_bignum, |big_uint| {
             BigInt::from_biguint(Sign::Plus, big_uint).into()
