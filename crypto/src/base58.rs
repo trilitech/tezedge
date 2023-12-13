@@ -23,6 +23,9 @@ pub enum FromBase58CheckError {
     DataTooLong,
     #[error("mismatched data lenght: expected {expected}, actual {actual}")]
     MismatchedLength { expected: usize, actual: usize },
+    /// Prefix does not match expected.
+    #[error("incorrect base58 prefix for hash type")]
+    IncorrectBase58Prefix,
 }
 
 /// Possible errors for ToBase58Check

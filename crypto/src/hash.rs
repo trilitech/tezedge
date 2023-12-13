@@ -36,7 +36,7 @@ mod prefix_bytes {
     pub const PUBLIC_KEY_SECP256K1: [u8; 4] = [3, 254, 226, 86];
     pub const PUBLIC_KEY_P256: [u8; 4] = [3, 178, 139, 127];
     pub const PUBLIC_KEY_BLS: [u8; 4] = [6, 149, 135, 204];
-    pub const SEED_ED25519: [u8; 4] = [43, 246, 78, 7];
+    pub const SEED_ED25519: [u8; 4] = [13, 15, 58, 7];
     pub const SECRET_KEY_ED25519: [u8; 4] = [43, 246, 78, 7];
     pub const SECRET_KEY_BLS: [u8; 4] = [3, 150, 192, 40];
     pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];
@@ -482,7 +482,11 @@ impl HashType {
                     return Ok(hash.to_vec());
                 }
             }
+        } else if !hash.starts_with(self.base58check_prefix()) {
+            println!("expected: {:?}, found: {hash:?}", self.base58check_prefix());
+            return Err(FromBase58CheckError::IncorrectBase58Prefix);
         }
+
         let expected_len = self.size() + self.base58check_prefix().len();
         if expected_len != hash.len() {
             return Err(FromBase58CheckError::MismatchedLength {
@@ -490,6 +494,7 @@ impl HashType {
                 actual: hash.len(),
             });
         }
+
         // prefix is not present in a binary representation
         hash.drain(0..self.base58check_prefix().len());
         Ok(hash)
@@ -1056,9 +1061,10 @@ mod tests {
     }
 
     #[test]
-    fn test_b58_to_hash_mismatched_lenght() -> Result<(), anyhow::Error> {
-        let b58 = HashType::ChainId.hash_to_b58check(&[0, 0, 0, 0])?;
-        let result = HashType::BlockHash.b58check_to_hash(&b58);
+    fn test_b58_to_hash_mismatched_length() -> Result<(), anyhow::Error> {
+        let b58 = "BwKZdq9yAc1ucmPPoUeRxRQRUeks64eswrLoSa2eZipYwB3UftmTd1pmg4uyiwU6Ge3guh7CoZdpL4YPm35Ajvu5gQu5mYwEgwA8UmjZNaXV7ecc7qkcoe6xro";
+        let result = HashType::BlockHash.b58check_to_hash(b58);
+        println!("{result:?}");
         assert!(matches!(
             result,
             Err(FromBase58CheckError::MismatchedLength {
@@ -1266,6 +1272,23 @@ mod tests {
                 "sr1VHPsgVnB3gzRyRULuVV2zmbKyRBMq9gbV"
             ]
         );
+    }
+
+    #[test]
+    fn from_base58check_incorrect_prefix() {
+        let h = ContractTz1Hash::from_base58_check("tz4FENGt5zkiGaHPm1ya4MgLomgkL1k7Dy7q");
+
+        assert!(matches!(
+            h,
+            Err(FromBase58CheckError::IncorrectBase58Prefix)
+        ));
+
+        let h = ContractTz4Hash::from_base58_check("tz1ei4WtWEMEJekSv8qDnu9PExG6Q8HgRGr3");
+
+        assert!(matches!(
+            h,
+            Err(FromBase58CheckError::IncorrectBase58Prefix)
+        ));
     }
 
     #[test]

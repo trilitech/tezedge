@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Nothing.
+- Add `FromBase58CheckError::IncorrectBase58Prefix` variant.
 
 ### Changed
 
@@ -24,7 +24,8 @@ parameterized by the lifetime of the input byte slice.
 
 ### Fixed
 
-- Nothing.
+- Fix prefix used in `SeedEd25519` encoding.
+- Add explicit prefix check during base58check decoding.
 
 ### Security
 
