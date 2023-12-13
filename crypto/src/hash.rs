@@ -36,7 +36,7 @@ mod prefix_bytes {
     pub const PUBLIC_KEY_SECP256K1: [u8; 4] = [3, 254, 226, 86];
     pub const PUBLIC_KEY_P256: [u8; 4] = [3, 178, 139, 127];
     pub const PUBLIC_KEY_BLS: [u8; 4] = [6, 149, 135, 204];
-    pub const SEED_ED25519: [u8; 4] = [43, 246, 78, 7];
+    pub const SEED_ED25519: [u8; 4] = [13, 15, 58, 7];
     pub const SECRET_KEY_ED25519: [u8; 4] = [43, 246, 78, 7];
     pub const SECRET_KEY_BLS: [u8; 4] = [3, 150, 192, 40];
     pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];

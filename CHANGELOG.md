@@ -24,7 +24,7 @@ parameterized by the lifetime of the input byte slice.
 
 ### Fixed
 
-- Nothing.
+- Fix prefix used in `SeedEd25519` encoding.
 
 ### Security
 
