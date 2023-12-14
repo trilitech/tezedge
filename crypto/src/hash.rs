@@ -648,7 +648,9 @@ impl SecretKeyEd25519 {
                 actual: self.0.len(),
             })?;
 
-        let signature = sk.sign(data.as_ref());
+        let payload = crate::blake2b::digest_256(data.as_ref())
+            .map_err(|e| CryptoError::AlgorithmError(e.to_string()))?;
+        let signature = sk.sign(&payload);
         Ok(Signature(signature.to_bytes().to_vec()))
     }
 }
@@ -669,7 +671,10 @@ impl PublicKeySignatureVerifier for PublicKeyEd25519 {
         let pk = ed25519_dalek::VerifyingKey::try_from(self)
             .map_err(|_| CryptoError::InvalidPublicKey)?;
 
-        pk.verify_strict(bytes, &signature)
+        let payload = crate::blake2b::digest_256(bytes)
+            .map_err(|e| CryptoError::AlgorithmError(e.to_string()))?;
+
+        pk.verify_strict(&payload, &signature)
             .map_err(CryptoError::Ed25519)?;
 
         Ok(true)
@@ -1092,13 +1097,13 @@ mod tests {
     #[test]
     fn test_ed255519_signature_verification() {
         let pk = PublicKeyEd25519::from_base58_check(
-            "edpkvWR5truf7AMF3PZVCXx7ieQLCW4MpNDzM3VwPfmFWVbBZwswBw",
+            "edpkuAwxKwdJK9r9Ersa185YqxPBNNZc6iFKCn8ifibHiPhztvf2NZ",
         )
         .unwrap();
         let sig = Signature::from_base58_check(
-            "sigdGBG68q2vskMuac4AzyNb1xCJTfuU8MiMbQtmZLUCYydYrtTd5Lessn1EFLTDJzjXoYxRasZxXbx6tHnirbEJtikcMHt3"
+            "sigsZwFnCnHBdmBcD763TUFZL5wCLXBDmAwPMyGY5edWe1B8XQQBv4X83RHkkrScVkAEKmU3CYg3cLH8Gja24LfDRyR23raX"
         ).unwrap();
-        let msg = hex::decode("bcbb7b77cb0712e4cd02160308cfd53e8dde8a7980c4ff28b62deb12304913c2")
+        let msg = hex::decode("b718d2420ad9498466bbfddf864f02f8a9a526a8585cf2e38ffac60e7a86f022cb0242acd44d3628255bf4b90d0737911193bf2e98064b9b237017d9b0b5fb53af478196f6bc99e43e7009e6")
             .unwrap();
 
         let result = pk.verify_signature(&sig, &msg).unwrap();
