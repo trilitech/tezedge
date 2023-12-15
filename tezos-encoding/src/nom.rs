@@ -267,6 +267,7 @@ hash_nom_reader!(SecretKeyEd25519);
 hash_nom_reader!(SecretKeyBls);
 hash_nom_reader!(Signature);
 hash_nom_reader!(Ed25519Signature);
+hash_nom_reader!(Secp256k1Signature);
 hash_nom_reader!(BlsSignature);
 hash_nom_reader!(NonceHash);
 hash_nom_reader!(SmartRollupHash);

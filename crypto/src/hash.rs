@@ -39,8 +39,9 @@ mod prefix_bytes {
     pub const SEED_ED25519: [u8; 4] = [13, 15, 58, 7];
     pub const SECRET_KEY_ED25519: [u8; 4] = [43, 246, 78, 7];
     pub const SECRET_KEY_BLS: [u8; 4] = [3, 150, 192, 40];
-    pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];
     pub const GENERIC_SIGNATURE_HASH: [u8; 3] = [4, 130, 43];
+    pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];
+    pub const SECP256K1_SIGNATURE_HASH: [u8; 5] = [13, 115, 101, 019, 063];
     pub const BLS_SIGNATURE_HASH: [u8; 4] = [40, 171, 64, 207];
     pub const NONCE_HASH: [u8; 3] = [69, 220, 169];
     pub const OPERATION_LIST_HASH: [u8; 2] = [133, 233];
@@ -306,8 +307,9 @@ define_hash!(PublicKeyBls);
 define_hash!(SeedEd25519);
 define_hash!(SecretKeyEd25519);
 define_hash!(SecretKeyBls);
-define_hash!(Ed25519Signature);
 define_hash!(Signature);
+define_hash!(Ed25519Signature);
+define_hash!(Secp256k1Signature);
 define_hash!(BlsSignature);
 define_hash!(NonceHash);
 define_hash!(OperationListHash);
@@ -362,10 +364,12 @@ pub enum HashType {
     SecretKeyEd25519,
     // "\003\150\192\040" (* BLsk(54) *)
     SecretKeyBls,
-    // "\009\245\205\134\018" (* edsig(99) *)
-    Ed25519Signature,
     // "\004\130\043" (* sig(96) *)
     Signature,
+    // "\009\245\205\134\018" (* edsig(99) *)
+    Ed25519Signature,
+    // "\013\115\101\019\063" (* spsig1(99) *)
+    Secp256k1Signature,
     // "\040\171\064\207" (* BLsig(142) *)
     BlsSignature,
     // "\069\220\169" (* nce(53) *)
@@ -404,8 +408,9 @@ impl HashType {
             HashType::SeedEd25519 => &SEED_ED25519,
             HashType::SecretKeyEd25519 => &SECRET_KEY_ED25519,
             HashType::SecretKeyBls => &SECRET_KEY_BLS,
-            HashType::Ed25519Signature => &ED22519_SIGNATURE_HASH,
             HashType::Signature => &GENERIC_SIGNATURE_HASH,
+            HashType::Ed25519Signature => &ED22519_SIGNATURE_HASH,
+            HashType::Secp256k1Signature => &SECP256K1_SIGNATURE_HASH,
             HashType::BlsSignature => &BLS_SIGNATURE_HASH,
             HashType::NonceHash => &NONCE_HASH,
             HashType::OperationListHash => &OPERATION_LIST_HASH,
@@ -439,7 +444,10 @@ impl HashType {
             HashType::PublicKeySecp256k1 | HashType::PublicKeyP256 => 33,
             HashType::SeedEd25519 | HashType::SecretKeyBls => 32,
             HashType::PublicKeyBls => 48,
-            HashType::SecretKeyEd25519 | HashType::Ed25519Signature | HashType::Signature => 64,
+            HashType::SecretKeyEd25519
+            | HashType::Ed25519Signature
+            | HashType::Secp256k1Signature
+            | HashType::Signature => 64,
             HashType::BlsSignature => 96,
         }
     }
@@ -1272,6 +1280,12 @@ mod tests {
         );
 
         test!(ed25519_sig, Ed25519Signature, ["edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q"]);
+
+        test!(
+            sig_secp256k1,
+            Secp256k1Signature,
+            ["spsig1PPUFZucuAQybs5wsqsNQ68QNgFaBnVKMFaoZZfi1BtNnuCAWnmL9wVy5HfHkR6AeodjVGxpBVVSYcJKyMURn6K1yknYLm"]
+        );
 
         test!(generic_sig, Signature, ["sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"]);
 
