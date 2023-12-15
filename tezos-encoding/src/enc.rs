@@ -354,6 +354,7 @@ encode_hash!(crypto::hash::SecretKeyBls);
 encode_hash!(crypto::hash::Signature);
 encode_hash!(crypto::hash::Ed25519Signature);
 encode_hash!(crypto::hash::Secp256k1Signature);
+encode_hash!(crypto::hash::P256Signature);
 encode_hash!(crypto::hash::BlsSignature);
 encode_hash!(crypto::hash::NonceHash);
 encode_hash!(crypto::hash::SmartRollupHash);

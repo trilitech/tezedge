@@ -42,6 +42,7 @@ mod prefix_bytes {
     pub const GENERIC_SIGNATURE_HASH: [u8; 3] = [4, 130, 43];
     pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];
     pub const SECP256K1_SIGNATURE_HASH: [u8; 5] = [13, 115, 101, 19, 63];
+    pub const P256_SIGNATURE_HASH: [u8; 4] = [54, 240, 44, 52];
     pub const BLS_SIGNATURE_HASH: [u8; 4] = [40, 171, 64, 207];
     pub const NONCE_HASH: [u8; 3] = [69, 220, 169];
     pub const OPERATION_LIST_HASH: [u8; 2] = [133, 233];
@@ -310,6 +311,7 @@ define_hash!(SecretKeyBls);
 define_hash!(Signature);
 define_hash!(Ed25519Signature);
 define_hash!(Secp256k1Signature);
+define_hash!(P256Signature);
 define_hash!(BlsSignature);
 define_hash!(NonceHash);
 define_hash!(OperationListHash);
@@ -370,6 +372,8 @@ pub enum HashType {
     Ed25519Signature,
     // "\013\115\101\019\063" (* spsig1(99) *)
     Secp256k1Signature,
+    // "\054\240\044\052" (* p2sig(98) *)
+    P256Signature,
     // "\040\171\064\207" (* BLsig(142) *)
     BlsSignature,
     // "\069\220\169" (* nce(53) *)
@@ -411,6 +415,7 @@ impl HashType {
             HashType::Signature => &GENERIC_SIGNATURE_HASH,
             HashType::Ed25519Signature => &ED22519_SIGNATURE_HASH,
             HashType::Secp256k1Signature => &SECP256K1_SIGNATURE_HASH,
+            HashType::P256Signature => &P256_SIGNATURE_HASH,
             HashType::BlsSignature => &BLS_SIGNATURE_HASH,
             HashType::NonceHash => &NONCE_HASH,
             HashType::OperationListHash => &OPERATION_LIST_HASH,
@@ -447,6 +452,7 @@ impl HashType {
             HashType::SecretKeyEd25519
             | HashType::Ed25519Signature
             | HashType::Secp256k1Signature
+            | HashType::P256Signature
             | HashType::Signature => 64,
             HashType::BlsSignature => 96,
         }
@@ -1285,6 +1291,12 @@ mod tests {
             sig_secp256k1,
             Secp256k1Signature,
             ["spsig1PPUFZucuAQybs5wsqsNQ68QNgFaBnVKMFaoZZfi1BtNnuCAWnmL9wVy5HfHkR6AeodjVGxpBVVSYcJKyMURn6K1yknYLm"]
+        );
+
+        test!(
+            sig_p256,
+            P256Signature,
+            ["p2sigRmXDp38VNVaEQH28LYukfLPn8QB5hPEberhvQrrUpRscDZJrrApbRh2u46PTVTwKXjxTLKNN9dyLhPQU6U6jWPGxe4d9v"]
         );
 
         test!(generic_sig, Signature, ["sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"]);
