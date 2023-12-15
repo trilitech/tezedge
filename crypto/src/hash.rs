@@ -1168,6 +1168,7 @@ mod tests {
                         assert_eq!(json, format!(r#""{}""#, h));
                         let h1 = serde_json::from_str(&json).expect("Cannot convert from json");
                         assert_eq!(h, h1);
+                        // assert_eq!(str, h1.to_base58_check());
                     }
                 }
             };
@@ -1244,6 +1245,25 @@ mod tests {
             SeedEd25519,
             ["edsk31vznjHSSpGExDMHYASz45VZqXN4DPxvsa4hAyY8dHM28cZzp6"]
         );
+
+        test!(
+            sk_ed25519,
+            SecretKeyEd25519,
+            ["edskRiUZpqYpyBCUQmhpfCmzHfYahfiMqkKb9AaYKaEggXKaEKVUWPBz6RkwabTmLHXajbpiytRdMJb4v4f4T8zN9t6QCHLTjy",
+            "edsk38tAHxtUJ84vxCpmNssVmLfchhf7dpJ7oJScsC4yuRNZQjtZSX"]
+        );
+
+        #[test]
+        fn sk_ed25519_() {
+          let seed = SeedEd25519::from_base58_check("edsk31vznjHSSpGExDMHYASz45VZqXN4DPxvsa4hAyY8dHM28cZzp6").unwrap(); // ===> OK
+          let (public_key, secret_key) = seed.keypair().unwrap(); // ===> OK
+          println!("sk: {:?}, {}", secret_key.0, secret_key.0.len());
+          let secret_key_str = secret_key.to_base58_check(); // ===> FAILURE
+          let public_key_str = public_key.to_base58_check(); // ===> OK
+
+          println!("sk: {}", secret_key); // ===> FAILURE
+          secret_key_str;
+        }
 
         test!(pk_hash, CryptoboxPublicKeyHash, []);
 
