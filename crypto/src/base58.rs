@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
-use base58::{FromBase58, ToBase58};
 use cryptoxide::hashing::sha256;
 use thiserror::Error;
 
@@ -18,10 +17,7 @@ pub enum FromBase58CheckError {
     /// The input is missing checksum.
     #[error("missing checksum")]
     MissingChecksum,
-    /// Data is too long
-    #[error("data too long")]
-    DataTooLong,
-    #[error("mismatched data lenght: expected {expected}, actual {actual}")]
+    #[error("mismatched data length: expected {expected}, actual {actual}")]
     MismatchedLength { expected: usize, actual: usize },
     /// Prefix does not match expected.
     #[error("incorrect base58 prefix for hash type")]
@@ -60,26 +56,20 @@ pub trait FromBase58Check {
 
 impl ToBase58Check for [u8] {
     fn to_base58check(&self) -> Result<String, ToBase58CheckError> {
-        if self.len() > 128 {
-            return Err(ToBase58CheckError::DataTooLong);
-        }
         // 4 bytes checksum
         let mut payload = Vec::with_capacity(self.len() + 4);
         payload.extend(self);
         let checksum = double_sha256(self);
         payload.extend(&checksum[..4]);
 
-        Ok(payload.to_base58())
+        Ok(bs58::encode(payload).into_string())
     }
 }
 
 impl FromBase58Check for str {
     fn from_base58check(&self) -> Result<Vec<u8>, FromBase58CheckError> {
-        if self.len() > 128 {
-            return Err(FromBase58CheckError::DataTooLong);
-        }
-        match self.from_base58() {
-            Ok(payload) => {
+        match bs58::decode(self).into_vec() {
+            Ok(mut payload) => {
                 if payload.len() >= Self::CHECKSUM_BYTE_SIZE {
                     let data_len = payload.len() - Self::CHECKSUM_BYTE_SIZE;
                     let data = &payload[..data_len];
@@ -89,7 +79,8 @@ impl FromBase58Check for str {
                     let checksum_expected = &checksum_expected[..4];
 
                     if checksum_expected == checksum_provided {
-                        Ok(data.to_vec())
+                        payload.truncate(data_len);
+                        Ok(payload)
                     } else {
                         Err(FromBase58CheckError::InvalidChecksum)
                     }
@@ -122,19 +113,5 @@ mod tests {
         assert_eq!(expected, decoded);
 
         Ok(())
-    }
-
-    #[test]
-    fn test_encode_fail() {
-        let data = [0; 129].to_vec();
-        let res = data.to_base58check();
-        assert!(matches!(res, Err(ToBase58CheckError::DataTooLong)));
-    }
-
-    #[test]
-    fn test_decode_fail() {
-        let encoded = "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
-        let res = encoded.from_base58check();
-        assert!(matches!(res, Err(FromBase58CheckError::DataTooLong)));
     }
 }
