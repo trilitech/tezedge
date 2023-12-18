@@ -28,6 +28,7 @@ parameterized by the lifetime of the input byte slice.
 - Fix prefix used in `SeedEd25519` encoding.
 - Add explicit prefix check during base58check decoding.
 - Hash input before signing with `SecretKeyEd25519`, to match octez impl.
+- Fix `BlsSignature` base58 check encoding/decoding.
 
 ### Security
 
