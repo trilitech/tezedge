@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Add `FromBase58CheckError::IncorrectBase58Prefix` variant.
+- Add `NomReader`, `BinWriter` support for `Ed25519Signature`.
 
 ### Changed
 
