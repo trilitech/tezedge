@@ -24,7 +24,7 @@ parameterized by the lifetime of the input byte slice.
 
 ### Removed
 
-- Nothing.
+- Removed legacy `SecretKeyEd25519` encoding.
 
 ### Fixed
 
@@ -32,6 +32,7 @@ parameterized by the lifetime of the input byte slice.
 - Add explicit prefix check during base58check decoding.
 - Hash input before signing with `SecretKeyEd25519`, to match octez impl.
 - Fix `BlsSignature` base58 check encoding/decoding.
+- Fix `SecretKeyEd25519` base58 check encoding/decoding.
 
 ### Security
 
