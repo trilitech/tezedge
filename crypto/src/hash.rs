@@ -7,6 +7,7 @@ use std::convert::{TryFrom, TryInto};
 use crate::{
     base58::{FromBase58Check, FromBase58CheckError, ToBase58Check},
     blake2b::{self, Blake2bError},
+    signature::Signature,
     CryptoError, PublicKeySignatureVerifier, PublicKeyWithHash,
 };
 use serde::{Deserialize, Serialize};
@@ -75,7 +76,7 @@ pub enum FromBytesError {
     /// Invalid data size
     #[error("invalid hash size")]
     InvalidSize,
-    /// Ed25519 decrompression
+    /// Ed25519 decompression
     #[error("From bytes ed25519: {0:?}")]
     Ed25519(ed25519_dalek::SignatureError),
 }
@@ -308,7 +309,7 @@ define_hash!(PublicKeyBls);
 define_hash!(SeedEd25519);
 define_hash!(SecretKeyEd25519);
 define_hash!(SecretKeyBls);
-define_hash!(Signature);
+define_hash!(UnknownSignature);
 define_hash!(Ed25519Signature);
 define_hash!(Secp256k1Signature);
 define_hash!(P256Signature);
@@ -367,7 +368,7 @@ pub enum HashType {
     // "\003\150\192\040" (* BLsk(54) *)
     SecretKeyBls,
     // "\004\130\043" (* sig(96) *)
-    Signature,
+    UnknownSignature,
     // "\009\245\205\134\018" (* edsig(99) *)
     Ed25519Signature,
     // "\013\115\101\019\063" (* spsig1(99) *)
@@ -412,7 +413,7 @@ impl HashType {
             HashType::SeedEd25519 => &SEED_ED25519,
             HashType::SecretKeyEd25519 => &SECRET_KEY_ED25519,
             HashType::SecretKeyBls => &SECRET_KEY_BLS,
-            HashType::Signature => &GENERIC_SIGNATURE_HASH,
+            HashType::UnknownSignature => &GENERIC_SIGNATURE_HASH,
             HashType::Ed25519Signature => &ED22519_SIGNATURE_HASH,
             HashType::Secp256k1Signature => &SECP256K1_SIGNATURE_HASH,
             HashType::P256Signature => &P256_SIGNATURE_HASH,
@@ -453,7 +454,7 @@ impl HashType {
             | HashType::Ed25519Signature
             | HashType::Secp256k1Signature
             | HashType::P256Signature
-            | HashType::Signature => 64,
+            | HashType::UnknownSignature => 64,
             HashType::BlsSignature => 96,
         }
     }
@@ -464,7 +465,8 @@ impl HashType {
             Err(FromBytesError::InvalidSize)
         } else {
             let mut hash = Vec::with_capacity(self.base58check_prefix().len() + data.len());
-            if matches!(self, Self::Signature) && data == [0; Self::Ed25519Signature.size()] {
+            if matches!(self, Self::UnknownSignature) && data == [0; Self::Ed25519Signature.size()]
+            {
                 hash.extend(Self::Ed25519Signature.base58check_prefix());
             } else {
                 hash.extend(self.base58check_prefix());
@@ -482,7 +484,7 @@ impl HashType {
     /// Convert string representation of the hash to bytes form.
     pub fn b58check_to_hash(&self, data: &str) -> Result<Hash, FromBase58CheckError> {
         let mut hash = data.from_base58check()?;
-        if let HashType::Signature = self {
+        if let HashType::UnknownSignature = self {
             // zero signature is represented as Ed25519 signature
             if hash.len()
                 == HashType::Ed25519Signature.size()
@@ -665,7 +667,9 @@ impl SecretKeyEd25519 {
         let payload = crate::blake2b::digest_256(data.as_ref())
             .map_err(|e| CryptoError::AlgorithmError(e.to_string()))?;
         let signature = sk.sign(&payload);
-        Ok(Signature(signature.to_bytes().to_vec()))
+        Ok(Signature::Ed25519(Ed25519Signature(
+            signature.to_bytes().to_vec(),
+        )))
     }
 }
 
@@ -676,8 +680,7 @@ impl PublicKeySignatureVerifier for PublicKeyEd25519 {
     /// Verifies the correctness of `bytes` signed by Ed25519 as the `signature`.
     fn verify_signature(&self, signature: &Signature, bytes: &[u8]) -> Result<bool, Self::Error> {
         let signature = signature
-            .0
-            .as_slice()
+            .as_ref()
             .try_into()
             .map(ed25519_dalek::Signature::from_bytes)
             .map_err(|_| CryptoError::InvalidSignature)?;
@@ -706,7 +709,7 @@ impl PublicKeySignatureVerifier for PublicKeySecp256k1 {
             Some(libsecp256k1::PublicKeyFormat::Compressed),
         )
         .map_err(|_| CryptoError::InvalidPublicKey)?;
-        let sig = libsecp256k1::Signature::parse_standard_slice(&signature.0)
+        let sig = libsecp256k1::Signature::parse_standard_slice(signature.as_ref())
             .map_err(|_| CryptoError::InvalidSignature)?;
         let msg =
             libsecp256k1::Message::parse_slice(bytes).map_err(|_| CryptoError::InvalidMessage)?;
@@ -767,10 +770,10 @@ impl PublicKeySignatureVerifier for PublicKeyP256 {
 
         let pk = p256::ecdsa::VerifyingKey::from_sec1_bytes(&self.0)
             .map_err(|_| CryptoError::InvalidPublicKey)?;
-        let r: [u8; 32] = signature.0[..32]
+        let r: [u8; 32] = signature.as_ref()[..32]
             .try_into()
             .map_err(|_| CryptoError::InvalidSignature)?;
-        let s: [u8; 32] = signature.0[32..]
+        let s: [u8; 32] = signature.as_ref()[32..]
             .try_into()
             .map_err(|_| CryptoError::InvalidSignature)?;
         let sig = p256::ecdsa::Signature::from_scalars(r, s)
@@ -1097,13 +1100,13 @@ mod tests {
     #[test]
     fn test_b85_to_signature_hash() -> Result<(), anyhow::Error> {
         let encoded = "sigbQ5ZNvkjvGssJgoAnUAfY4Wvvg3QZqawBYB1j1VDBNTMBAALnCzRHWzer34bnfmzgHg3EvwdzQKdxgSghB897cono6gbQ";
-        let decoded = hex::encode(HashType::Signature.b58check_to_hash(encoded)?);
+        let decoded = hex::encode(HashType::UnknownSignature.b58check_to_hash(encoded)?);
         let expected = "66804fe735e06e97e26da8236b6341b91c625d5e82b3524ec0a88cc982365e70f8a5b9bc65df2ea6d21ee244cc3a96fb33031c394c78b1179ff1b8a44237740c";
         assert_eq!(expected, decoded);
 
         assert_eq!(
             encoded,
-            HashType::Signature.hash_to_b58check(&hex::decode(decoded)?)?
+            HashType::UnknownSignature.hash_to_b58check(&hex::decode(decoded)?)?
         );
         Ok(())
     }
@@ -1299,7 +1302,18 @@ mod tests {
             ["p2sigRmXDp38VNVaEQH28LYukfLPn8QB5hPEberhvQrrUpRscDZJrrApbRh2u46PTVTwKXjxTLKNN9dyLhPQU6U6jWPGxe4d9v"]
         );
 
-        test!(generic_sig, Signature, ["sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"]);
+        test!(generic_sig, UnknownSignature, ["sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"]);
+
+        use crate::signature::Signature;
+        test!(
+            composite_sig,
+            Signature,
+            [
+                "BLsigAmLKnuw12tethjMmotFPaQ6u4XCKrVk6c15dkRXKkjDDjHywbhS3nd4rBT31yrCvvQrS2HntWhDRu7sX8Vvek53zBUwQHqfcHRiVKVj1ehq8CBYs1Z7XW2rkL2XkVNHua4cnvxY7F",
+                "edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q",
+                "spsig1PPUFZucuAQybs5wsqsNQ68QNgFaBnVKMFaoZZfi1BtNnuCAWnmL9wVy5HfHkR6AeodjVGxpBVVSYcJKyMURn6K1yknYLm",
+                "p2sigRmXDp38VNVaEQH28LYukfLPn8QB5hPEberhvQrrUpRscDZJrrApbRh2u46PTVTwKXjxTLKNN9dyLhPQU6U6jWPGxe4d9v"
+            ]);
 
         test!(
             smart_rollup_hash,

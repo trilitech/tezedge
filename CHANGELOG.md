@@ -9,12 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Add `FromBase58CheckError::IncorrectBase58Prefix` variant.
 - Add `NomReader`, `BinWriter` support for `Ed25519Signature`.
+- Add `signature::Signature` enum representing possible types of signature used in Tezos.
 
 ### Changed
 
 - `tezos_data_encoding`: The `NomReader` trait is now explicitly
 parameterized by the lifetime of the input byte slice.
 - Altered hashes to implement `AsRef<[u8]>` instead of `AsRef<Vec<u8>>`.
+- Renamed `hash::Signature` to `hash::UnknownSignature`.
 
 ### Deprecated
 

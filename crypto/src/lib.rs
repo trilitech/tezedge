@@ -14,6 +14,7 @@ pub mod base58;
 pub mod bls;
 #[macro_use]
 pub mod hash;
+pub mod signature;
 
 #[derive(Debug, Error)]
 pub enum CryptoError {

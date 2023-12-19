@@ -76,6 +76,7 @@ pub mod error {
         List,
         Dynamic,
         Bounded,
+        Signature,
     }
 
     impl<'a> DecodeError<NomInput<'a>> {
@@ -265,13 +266,27 @@ hash_nom_reader!(PublicKeyP256);
 hash_nom_reader!(PublicKeyBls);
 hash_nom_reader!(SecretKeyEd25519);
 hash_nom_reader!(SecretKeyBls);
-hash_nom_reader!(Signature);
+hash_nom_reader!(UnknownSignature);
 hash_nom_reader!(Ed25519Signature);
 hash_nom_reader!(Secp256k1Signature);
 hash_nom_reader!(P256Signature);
 hash_nom_reader!(BlsSignature);
 hash_nom_reader!(NonceHash);
 hash_nom_reader!(SmartRollupHash);
+
+impl<'a> NomReader<'a> for crypto::signature::Signature {
+    fn nom_read(input: &'a [u8]) -> NomResult<'a, Self> {
+        let (rest, v) = dynamic(bytes)(input)?;
+        if let Ok(v) = Self::try_from(v) {
+            Ok((rest, v))
+        } else {
+            Err(Err::Error(DecodeError::limit(
+                input,
+                BoundedEncodingKind::Signature,
+            )))
+        }
+    }
+}
 
 impl<'a> NomReader<'a> for Zarith {
     fn nom_read(bytes: &[u8]) -> NomResult<Self> {
