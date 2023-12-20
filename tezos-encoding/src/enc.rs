@@ -351,13 +351,19 @@ encode_hash!(crypto::hash::PublicKeyP256);
 encode_hash!(crypto::hash::PublicKeyBls);
 encode_hash!(crypto::hash::SecretKeyEd25519);
 encode_hash!(crypto::hash::SecretKeyBls);
-encode_hash!(crypto::hash::Signature);
+encode_hash!(crypto::hash::UnknownSignature);
 encode_hash!(crypto::hash::Ed25519Signature);
 encode_hash!(crypto::hash::Secp256k1Signature);
 encode_hash!(crypto::hash::P256Signature);
 encode_hash!(crypto::hash::BlsSignature);
 encode_hash!(crypto::hash::NonceHash);
 encode_hash!(crypto::hash::SmartRollupHash);
+
+impl BinWriter for crypto::signature::Signature {
+    fn bin_write(&self, out: &mut Vec<u8>) -> BinResult {
+        dynamic(bytes)(self, out)
+    }
+}
 
 impl BinWriter for Mutez {
     fn bin_write(&self, out: &mut Vec<u8>) -> BinResult {

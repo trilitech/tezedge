@@ -338,10 +338,19 @@ hash_has_encoding!(PublicKeyP256, PUBLIC_KEY_P256);
 hash_has_encoding!(PublicKeyBls, PUBLIC_KEY_BLS);
 hash_has_encoding!(SecretKeyEd25519, SECRET_KEY_ED25519);
 hash_has_encoding!(SecretKeyBls, SECRET_KEY_BLS);
-hash_has_encoding!(Signature, SIGNATURE);
+hash_has_encoding!(UnknownSignature, UNKNOWN_SIGNATURE);
+hash_has_encoding!(Ed25519Signature, ED25519_SIGNATURE_HASH);
+hash_has_encoding!(Secp256k1Signature, SECP256K1_SIGNATURE_HASH);
+hash_has_encoding!(P256Signature, P256_SIGNATURE_HASH);
 hash_has_encoding!(BlsSignature, BLS_SIGNATURE_HASH);
 hash_has_encoding!(NonceHash, NONCE_HASH);
 hash_has_encoding!(SmartRollupHash, SMART_ROLLUP_HASH);
+
+impl HasEncoding for crypto::signature::Signature {
+    fn encoding() -> Encoding {
+        Encoding::Custom
+    }
+}
 
 /// Creates impl HasEncoding for given struct backed by lazy_static ref instance with encoding.
 #[macro_export]
