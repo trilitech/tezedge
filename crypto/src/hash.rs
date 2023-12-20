@@ -38,7 +38,9 @@ mod prefix_bytes {
     pub const PUBLIC_KEY_P256: [u8; 4] = [3, 178, 139, 127];
     pub const PUBLIC_KEY_BLS: [u8; 4] = [6, 149, 135, 204];
     pub const SEED_ED25519: [u8; 4] = [13, 15, 58, 7];
-    pub const SECRET_KEY_ED25519: [u8; 4] = [43, 246, 78, 7];
+    // SecretKeyEd25519 uses identical b58 encoding as SeedEd25519 in
+    // non-legacy format.
+    pub const SECRET_KEY_ED25519: [u8; 4] = SEED_ED25519;
     pub const SECRET_KEY_BLS: [u8; 4] = [3, 150, 192, 40];
     pub const GENERIC_SIGNATURE_HASH: [u8; 3] = [4, 130, 43];
     pub const ED22519_SIGNATURE_HASH: [u8; 5] = [9, 245, 205, 134, 18];
@@ -363,7 +365,7 @@ pub enum HashType {
     PublicKeyBls,
     // "\013\015\058\007" (* edsk(54) *)
     SeedEd25519,
-    // "\043\246\078\007" (* edsk(98) *)
+    // "\013\015\058\007" (* edsk(54) *)
     SecretKeyEd25519,
     // "\003\150\192\040" (* BLsk(54) *)
     SecretKeyBls,
@@ -448,10 +450,9 @@ impl HashType {
             | HashType::ContractTz4Hash
             | HashType::SmartRollupHash => 20,
             HashType::PublicKeySecp256k1 | HashType::PublicKeyP256 => 33,
-            HashType::SeedEd25519 | HashType::SecretKeyBls => 32,
+            HashType::SecretKeyEd25519 | HashType::SeedEd25519 | HashType::SecretKeyBls => 32,
             HashType::PublicKeyBls => 48,
-            HashType::SecretKeyEd25519
-            | HashType::Ed25519Signature
+            HashType::Ed25519Signature
             | HashType::Secp256k1Signature
             | HashType::P256Signature
             | HashType::UnknownSignature => 64,
@@ -1181,6 +1182,8 @@ mod tests {
                 fn $name() {
                     for str in $h {
                         let h = $ty::from_base58_check(str).expect("Invalid hash");
+                        assert_eq!(str, h.to_base58_check());
+
                         let json = serde_json::to_string(&h).expect("Cannot convert to json");
                         assert_eq!(json, format!(r#""{}""#, h));
                         let h1 = serde_json::from_str(&json).expect("Cannot convert from json");
@@ -1260,6 +1263,15 @@ mod tests {
             seed_ed25519,
             SeedEd25519,
             ["edsk31vznjHSSpGExDMHYASz45VZqXN4DPxvsa4hAyY8dHM28cZzp6"]
+        );
+
+        test!(
+            sk_ed25519,
+            SecretKeyEd25519,
+            [
+                "edsk31vznjHSSpGExDMHYASz45VZqXN4DPxvsa4hAyY8dHM28cZzp6",
+                "edsk3gUfUPyBSfrS9CCgmCiQsTCHGkviBDusMxDJstFtojtc1zcpsh"
+            ]
         );
 
         test!(pk_hash, CryptoboxPublicKeyHash, []);
