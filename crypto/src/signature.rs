@@ -124,3 +124,14 @@ impl ::std::fmt::Display for Signature {
         write!(f, "{}", self.to_base58_check())
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test() {
+        assert_eq!(
+            &super::Signature::try_from([0; 64].to_vec()).unwrap().to_base58_check(),
+            "sigMzJ4GVAvXEd2RjsKGfG2H9QvqTSKCZsuB2KiHbZRGFz72XgF6KaKADznh674fQgBatxw3xdHqTtMHUZAGRprxy64wg1aq"
+        );
+    }
+}

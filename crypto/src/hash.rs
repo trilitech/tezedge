@@ -466,12 +466,8 @@ impl HashType {
             Err(FromBytesError::InvalidSize)
         } else {
             let mut hash = Vec::with_capacity(self.base58check_prefix().len() + data.len());
-            if matches!(self, Self::UnknownSignature) && data == [0; Self::Ed25519Signature.size()]
-            {
-                hash.extend(Self::Ed25519Signature.base58check_prefix());
-            } else {
-                hash.extend(self.base58check_prefix());
-            }
+
+            hash.extend(self.base58check_prefix());
             hash.extend(data);
 
             Ok(hash.to_base58check())
@@ -481,22 +477,8 @@ impl HashType {
     /// Convert string representation of the hash to bytes form.
     pub fn b58check_to_hash(&self, data: &str) -> Result<Hash, FromBase58CheckError> {
         let mut hash = data.from_base58check()?;
-        if let HashType::UnknownSignature = self {
-            // zero signature is represented as Ed25519 signature
-            if hash.len()
-                == HashType::Ed25519Signature.size()
-                    + HashType::Ed25519Signature.base58check_prefix().len()
-            {
-                let (prefix, hash) =
-                    hash.split_at(HashType::Ed25519Signature.base58check_prefix().len());
-                if prefix == HashType::Ed25519Signature.base58check_prefix()
-                    && hash == [0; HashType::Ed25519Signature.size()]
-                {
-                    return Ok(hash.to_vec());
-                }
-            }
-        } else if !hash.starts_with(self.base58check_prefix()) {
-            println!("expected: {:?}, found: {hash:?}", self.base58check_prefix());
+
+        if !hash.starts_with(self.base58check_prefix()) {
             return Err(FromBase58CheckError::IncorrectBase58Prefix);
         }
 
