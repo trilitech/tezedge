@@ -84,7 +84,7 @@ pub enum Encoding<'a> {
     Dynamic(Option<syn::Expr>, Box<Encoding<'a>>, Span),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Display, FromStr)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, FromStr)]
 pub enum PrimitiveEncoding {
     Int8,
     Uint8,

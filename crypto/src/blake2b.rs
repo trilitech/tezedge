@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[cfg_attr(feature = "fuzzing", derive(fuzzcheck::DefaultMutator))]
-#[derive(Serialize, Deserialize, Error, Debug, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Error, Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Blake2bError {
     #[error("Output digest length must be between 16 and 64 bytes.")]
     InvalidLength,
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn blake2b_digest_all() {
-        let hash = digest_all(&["hello", " ", "world"], 32).unwrap();
+        let hash = digest_all(["hello", " ", "world"], 32).unwrap();
         assert_eq!(
             hash,
             hex::decode("256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610")

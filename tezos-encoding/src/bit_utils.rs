@@ -9,7 +9,7 @@ use bit_vec::BitVec;
 use thiserror::Error;
 
 /// An error triggered when working with [Bits].
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum BitsError {
     /// Index is out of range
     #[error("index out of range")]

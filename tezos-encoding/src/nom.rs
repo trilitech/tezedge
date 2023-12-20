@@ -46,7 +46,7 @@ pub mod error {
     }
 
     /// Decoding error kind.
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Eq)]
     pub enum DecodeErrorKind {
         /// Nom-specific error.
         Nom(ErrorKind),
@@ -67,7 +67,7 @@ pub mod error {
     }
 
     /// Specific bounded encoding kind.
-    #[derive(Debug, PartialEq, Clone)]
+    #[derive(Debug, PartialEq, Eq, Clone)]
     pub enum BoundedEncodingKind {
         String,
         List,

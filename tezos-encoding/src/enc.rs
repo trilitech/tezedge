@@ -173,7 +173,7 @@ where
     T: ?Sized + BinWriter,
 {
     fn bin_write(&self, output: &mut Vec<u8>) -> BinResult {
-        (&**self).bin_write(output)
+        (**self).bin_write(output)
     }
 }
 
@@ -573,7 +573,7 @@ mod test {
     #[test]
     fn bytes() {
         let mut out = Vec::new();
-        super::bytes(&[1, 2, 3], &mut out).expect("Should not fail");
+        super::bytes([1, 2, 3], &mut out).expect("Should not fail");
         assert_eq!(&out, &[1, 2, 3]);
     }
 
