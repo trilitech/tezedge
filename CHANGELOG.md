@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 parameterized by the lifetime of the input byte slice.
 - Altered hashes to implement `AsRef<[u8]>` instead of `AsRef<Vec<u8>>`.
 - Renamed `hash::Signature` to `hash::UnknownSignature`.
+- All hash structs no longer publicly expose the underlying `Hash`. Instead, use `Into<Vec<u8>>` and `AsRef<[u8]>`.
+- `ToBase58Check` no longer returns a `Result` type.
 
 ### Deprecated
 
@@ -25,6 +27,7 @@ parameterized by the lifetime of the input byte slice.
 ### Removed
 
 - Removed legacy `SecretKeyEd25519` encoding.
+- Removed `ToBase58CheckError`.
 
 ### Fixed
 

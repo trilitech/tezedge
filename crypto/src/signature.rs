@@ -11,8 +11,8 @@
 
 use crate::base58::FromBase58CheckError;
 use crate::hash::{
-    BlsSignature, Ed25519Signature, FromBytesError, HashTrait, HashType, P256Signature,
-    Secp256k1Signature, UnknownSignature,
+    BlsSignature, Ed25519Signature, FromBytesError, HashTrait, P256Signature, Secp256k1Signature,
+    UnknownSignature,
 };
 use serde::{Deserialize, Serialize};
 
@@ -57,11 +57,11 @@ impl Signature {
 impl AsRef<[u8]> for Signature {
     fn as_ref(&self) -> &[u8] {
         match self {
-            Self::Ed25519(s) => s.0.as_ref(),
-            Self::Secp256k1(s) => s.0.as_ref(),
-            Self::P256(s) => s.0.as_ref(),
-            Self::Bls(s) => s.0.as_ref(),
-            Self::Unknown(s) => s.0.as_ref(),
+            Self::Ed25519(s) => s.as_ref(),
+            Self::Secp256k1(s) => s.as_ref(),
+            Self::P256(s) => s.as_ref(),
+            Self::Bls(s) => s.as_ref(),
+            Self::Unknown(s) => s.as_ref(),
         }
     }
 }
@@ -69,11 +69,11 @@ impl AsRef<[u8]> for Signature {
 impl From<Signature> for Vec<u8> {
     fn from(s: Signature) -> Self {
         match s {
-            Signature::Ed25519(s) => s.0,
-            Signature::Secp256k1(s) => s.0,
-            Signature::P256(s) => s.0,
-            Signature::Bls(s) => s.0,
-            Signature::Unknown(s) => s.0,
+            Signature::Ed25519(s) => s.into(),
+            Signature::Secp256k1(s) => s.into(),
+            Signature::P256(s) => s.into(),
+            Signature::Bls(s) => s.into(),
+            Signature::Unknown(s) => s.into(),
         }
     }
 }
@@ -82,12 +82,10 @@ impl TryFrom<Vec<u8>> for Signature {
     type Error = FromBytesError;
 
     fn try_from(hash: Vec<u8>) -> Result<Self, Self::Error> {
-        if hash.len() == HashType::BlsSignature.size() {
-            Ok(Signature::Bls(BlsSignature(hash)))
-        } else if hash.len() == HashType::UnknownSignature.size() {
-            Ok(Signature::Unknown(UnknownSignature(hash)))
+        if hash.len() == BlsSignature::hash_size() {
+            Ok(Signature::Bls(BlsSignature::try_from(hash)?))
         } else {
-            Err(FromBytesError::InvalidSize)
+            Ok(Signature::Unknown(UnknownSignature::try_from(hash)?))
         }
     }
 }
@@ -96,12 +94,10 @@ impl TryFrom<&[u8]> for Signature {
     type Error = FromBytesError;
 
     fn try_from(hash: &[u8]) -> Result<Self, Self::Error> {
-        if hash.len() == HashType::BlsSignature.size() {
-            Ok(Signature::Bls(BlsSignature(hash.to_vec())))
-        } else if hash.len() == HashType::UnknownSignature.size() {
-            Ok(Signature::Unknown(UnknownSignature(hash.to_vec())))
+        if let Ok(s) = BlsSignature::try_from(hash) {
+            Ok(Signature::Bls(s))
         } else {
-            Err(FromBytesError::InvalidSize)
+            Ok(Signature::Unknown(UnknownSignature::try_from(hash)?))
         }
     }
 }

@@ -24,14 +24,6 @@ pub enum FromBase58CheckError {
     IncorrectBase58Prefix,
 }
 
-/// Possible errors for ToBase58Check
-#[derive(Debug, Error)]
-pub enum ToBase58CheckError {
-    /// Data is too long
-    #[error("data too long")]
-    DataTooLong,
-}
-
 /// Create double hash of given binary data
 fn double_sha256(data: &[u8]) -> [u8; 32] {
     let digest = sha256(data);
@@ -41,7 +33,7 @@ fn double_sha256(data: &[u8]) -> [u8; 32] {
 /// A trait for converting a value to base58 encoded string.
 pub trait ToBase58Check {
     /// Converts a value of `self` to a base58 value, returning the owned string.
-    fn to_base58check(&self) -> Result<String, ToBase58CheckError>;
+    fn to_base58check(&self) -> String;
 }
 
 /// A trait for converting base58check encoded values.
@@ -55,14 +47,14 @@ pub trait FromBase58Check {
 }
 
 impl ToBase58Check for [u8] {
-    fn to_base58check(&self) -> Result<String, ToBase58CheckError> {
+    fn to_base58check(&self) -> String {
         // 4 bytes checksum
         let mut payload = Vec::with_capacity(self.len() + 4);
         payload.extend(self);
         let checksum = double_sha256(self);
         payload.extend(&checksum[..4]);
 
-        Ok(bs58::encode(payload).into_string())
+        bs58::encode(payload).into_string()
     }
 }
 
@@ -99,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_encode() -> Result<(), anyhow::Error> {
-        let decoded = hex::decode("8eceda2f")?.to_base58check().unwrap();
+        let decoded = hex::decode("8eceda2f")?.to_base58check();
         let expected = "QtRAcc9FSRg";
         assert_eq!(expected, &decoded);
 

@@ -86,7 +86,7 @@ pub enum FromBytesError {
 macro_rules! define_hash {
     ($name:ident) => {
         #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        pub struct $name(pub Hash);
+        pub struct $name(pub(crate) Hash);
 
         impl $name {
             fn from_bytes(data: &[u8]) -> Result<Self, FromBytesError> {
@@ -473,12 +473,8 @@ impl HashType {
                 hash.extend(self.base58check_prefix());
             }
             hash.extend(data);
-            hash.to_base58check()
-                // currently the error is returned if the input lenght exceeds 128 bytes
-                // that is the limitation of base58 crate, and there are no hash types
-                // exceeding that limit.
-                // TODO: remove this when TE-373 is implemented
-                .map_err(|_| unreachable!("Hash size should not exceed allowed 128 bytes"))
+
+            Ok(hash.to_base58check())
         }
     }
 
