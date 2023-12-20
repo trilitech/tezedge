@@ -51,7 +51,7 @@ mod prefix_bytes {
 
 pub type Hash = Vec<u8>;
 
-pub trait HashTrait: Into<Hash> + AsRef<Hash> {
+pub trait HashTrait: Into<Hash> + AsRef<[u8]> {
     /// Returns this hash type.
     fn hash_type() -> HashType;
 
@@ -171,8 +171,8 @@ macro_rules! define_hash {
             }
         }
 
-        impl std::convert::AsRef<Hash> for $name {
-            fn as_ref(&self) -> &Hash {
+        impl std::convert::AsRef<[u8]> for $name {
+            fn as_ref(&self) -> &[u8] {
                 &self.0
             }
         }

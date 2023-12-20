@@ -101,7 +101,7 @@ where
 // this implementation will calculate the same hash [5, 5] two times.
 pub fn merkle_tree<Leaf>(list: &[Leaf]) -> Result<Vec<u8>, Blake2bError>
 where
-    Leaf: AsRef<Vec<u8>>,
+    Leaf: AsRef<[u8]>,
 {
     use std::ops::{Index, RangeFrom, RangeTo};
 
@@ -156,7 +156,7 @@ where
         degree: u32,
     ) -> Result<Vec<u8>, Blake2bError>
     where
-        Leaf: AsRef<Vec<u8>>,
+        Leaf: AsRef<[u8]>,
     {
         match degree {
             0 => digest_256(list[0].as_ref()),
