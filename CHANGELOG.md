@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - `tezos_data_encoding`: The `NomReader` trait is now explicitly
 parameterized by the lifetime of the input byte slice.
+- Altered hashes to implement `AsRef<[u8]>` instead of `AsRef<Vec<u8>>`.
 
 ### Deprecated
 
