@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `FromBase58CheckError::IncorrectBase58Prefix` variant.
 - Add `NomReader`, `BinWriter` support for `Ed25519Signature`.
 - Add `signature::Signature` enum representing possible types of signature used in Tezos.
+- Add `From<PublicKeyEd25519>` impl for `ContractTz1Hash`.
+- Add `From<PublicKeySecp256k1>` impl for `ContractTz2Hash`.
+- Add `From<PublicKeyP256>` impl for `ContractTz3Hash`.
+- Add `From<PublicKeyBls>` impl for `ContractTz4Hash`.
 
 ### Changed
 
