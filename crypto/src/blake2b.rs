@@ -13,14 +13,6 @@ use thiserror::Error;
 pub enum Blake2bError {
     #[error("Output digest length must be between 16 and 64 bytes.")]
     InvalidLength,
-    #[error("Blake2b failed")]
-    Other,
-}
-
-impl From<()> for Blake2bError {
-    fn from(_: ()) -> Self {
-        Self::Other
-    }
 }
 
 /// Generate digest of length 256 bits (32bytes) from arbitrary binary data

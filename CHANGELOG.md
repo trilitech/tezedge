@@ -28,6 +28,7 @@ parameterized by the lifetime of the input byte slice.
 
 - Removed legacy `SecretKeyEd25519` encoding.
 - Removed `ToBase58CheckError`.
+- Removed unused `Blake2bError::Other`.
 
 ### Fixed
 
