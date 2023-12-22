@@ -522,24 +522,17 @@ pub fn chain_id_from_block_hash(block_hash: &BlockHash) -> ChainId {
         .unwrap_or_else(|_| unreachable!("ChainId is created from slice of correct size"))
 }
 
-#[cfg_attr(feature = "fuzzing", derive(fuzzcheck::DefaultMutator))]
-#[derive(Debug, Error)]
-pub enum TryFromPKError {
-    #[error("Error calculating digest")]
-    Digest(#[from] Blake2bError),
-    #[error("Invalid hash size")]
-    Size(#[from] FromBytesError),
-}
-
 macro_rules! pk_with_hash {
     ($pk:ident, $pkh:ident) => {
         impl PublicKeyWithHash for $pk {
             type Hash = $pkh;
-            type Error = TryFromPKError;
+            type Error = ::std::convert::Infallible;
 
             fn pk_hash(&self) -> Result<Self::Hash, Self::Error> {
                 let hash = blake2b::digest_160(&self.0);
-                let typed_hash = Self::Hash::from_bytes(&hash)?;
+                // hash size is 20 bytes (160 bits), exactly how many
+                // ContractTz*Hash expect, safe to unwrap
+                let typed_hash = Self::Hash::from_bytes(&hash).unwrap();
                 Ok(typed_hash)
             }
         }
@@ -552,41 +545,41 @@ pk_with_hash!(PublicKeyP256, ContractTz3Hash);
 pk_with_hash!(PublicKeyBls, ContractTz4Hash);
 
 impl TryFrom<PublicKeyEd25519> for ContractTz1Hash {
-    type Error = TryFromPKError;
+    type Error = ::std::convert::Infallible;
 
     fn try_from(source: PublicKeyEd25519) -> Result<Self, Self::Error> {
         let hash = blake2b::digest_160(&source.0);
-        let typed_hash = Self::from_bytes(&hash)?;
+        let typed_hash = Self::from_bytes(&hash).unwrap();
         Ok(typed_hash)
     }
 }
 
 impl TryFrom<PublicKeySecp256k1> for ContractTz2Hash {
-    type Error = TryFromPKError;
+    type Error = ::std::convert::Infallible;
 
     fn try_from(source: PublicKeySecp256k1) -> Result<Self, Self::Error> {
         let hash = blake2b::digest_160(&source.0);
-        let typed_hash = Self::from_bytes(&hash)?;
+        let typed_hash = Self::from_bytes(&hash).unwrap();
         Ok(typed_hash)
     }
 }
 
 impl TryFrom<PublicKeyP256> for ContractTz3Hash {
-    type Error = TryFromPKError;
+    type Error = ::std::convert::Infallible;
 
     fn try_from(source: PublicKeyP256) -> Result<Self, Self::Error> {
         let hash = blake2b::digest_160(&source.0);
-        let typed_hash = Self::from_bytes(&hash)?;
+        let typed_hash = Self::from_bytes(&hash).unwrap();
         Ok(typed_hash)
     }
 }
 
 impl TryFrom<PublicKeyBls> for ContractTz4Hash {
-    type Error = TryFromPKError;
+    type Error = ::std::convert::Infallible;
 
     fn try_from(source: PublicKeyBls) -> Result<Self, Self::Error> {
         let hash = blake2b::digest_160(&source.0);
-        let typed_hash = Self::from_bytes(&hash)?;
+        let typed_hash = Self::from_bytes(&hash).unwrap();
         Ok(typed_hash)
     }
 }
