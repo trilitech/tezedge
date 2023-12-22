@@ -19,6 +19,11 @@ parameterized by the lifetime of the input byte slice.
 - Renamed `hash::Signature` to `hash::UnknownSignature`.
 - All hash structs no longer publicly expose the underlying `Hash`. Instead, use `Into<Vec<u8>>` and `AsRef<[u8]>`.
 - `ToBase58Check` no longer returns a `Result` type.
+- `blake2b::digest_128`, `blake2b::digest_160`, `blake2b::digest_256` return
+  plain `Vec<u8>` instead of `Result<Vec<u8>, Blake2bError>`, the error was
+  never possible.
+- `blake2b::merkle_tree` returns plain `Vec<u8>` instead of `Result<Vec<u8>,
+  Blake2bError>`, the error was never possible.
 
 ### Deprecated
 

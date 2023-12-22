@@ -584,8 +584,7 @@ where
 {
     move |input| {
         let (rest, result) = parser(input)?;
-        let hash = crypto::blake2b::digest_256(&input[..input.len() - rest.len()])
-            .map_err(|e| nom::Err::Failure(NomError::hash_error(input, e)))?;
+        let hash = crypto::blake2b::digest_256(&input[..input.len() - rest.len()]);
         Ok((rest, (result, hash)))
     }
 }
