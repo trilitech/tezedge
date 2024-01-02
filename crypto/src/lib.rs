@@ -43,9 +43,8 @@ pub enum CryptoError {
 /// Public key that support hashing.
 pub trait PublicKeyWithHash {
     type Hash;
-    type Error;
 
-    fn pk_hash(&self) -> Result<Self::Hash, Self::Error>;
+    fn pk_hash(&self) -> Self::Hash;
 }
 
 /// Public key that supports signature verification

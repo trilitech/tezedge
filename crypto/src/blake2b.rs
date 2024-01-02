@@ -13,29 +13,21 @@ use thiserror::Error;
 pub enum Blake2bError {
     #[error("Output digest length must be between 16 and 64 bytes.")]
     InvalidLength,
-    #[error("Blake2b failed")]
-    Other,
-}
-
-impl From<()> for Blake2bError {
-    fn from(_: ()) -> Self {
-        Self::Other
-    }
 }
 
 /// Generate digest of length 256 bits (32bytes) from arbitrary binary data
-pub fn digest_256(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
-    digest(data, 32)
+pub fn digest_256(data: &[u8]) -> Vec<u8> {
+    digest(data, 32).unwrap()
 }
 
 // Generate digest of length 160 bits (20bytes) from arbitrary binary data
-pub fn digest_160(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
-    digest(data, 20)
+pub fn digest_160(data: &[u8]) -> Vec<u8> {
+    digest(data, 20).unwrap()
 }
 
 /// Generate digest of length 128 bits (16bytes) from arbitrary binary data
-pub fn digest_128(data: &[u8]) -> Result<Vec<u8>, Blake2bError> {
-    digest(data, 16)
+pub fn digest_128(data: &[u8]) -> Vec<u8> {
+    digest(data, 16).unwrap()
 }
 
 /// Arbitrary Blake2b digest generation from generic data.
@@ -99,7 +91,7 @@ where
 //
 // TODO: optimize it,
 // this implementation will calculate the same hash [5, 5] two times.
-pub fn merkle_tree<Leaf>(list: &[Leaf]) -> Result<Vec<u8>, Blake2bError>
+pub fn merkle_tree<Leaf>(list: &[Leaf]) -> Vec<u8>
 where
     Leaf: AsRef<[u8]>,
 {
@@ -151,10 +143,7 @@ where
         }
     }
 
-    fn merkle_tree_inner<Leaf>(
-        list: &RepeatingSlice<Leaf>,
-        degree: u32,
-    ) -> Result<Vec<u8>, Blake2bError>
+    fn merkle_tree_inner<Leaf>(list: &RepeatingSlice<Leaf>, degree: u32) -> Vec<u8>
     where
         Leaf: AsRef<[u8]>,
     {
@@ -164,11 +153,12 @@ where
                 let middle = 1 << (d - 1);
                 digest_all(
                     &[
-                        merkle_tree_inner(&RepeatingSlice(&list[..middle]), d - 1)?,
-                        merkle_tree_inner(&RepeatingSlice(&list[middle..]), d - 1)?,
+                        merkle_tree_inner(&RepeatingSlice(&list[..middle]), d - 1),
+                        merkle_tree_inner(&RepeatingSlice(&list[middle..]), d - 1),
                     ],
                     32,
                 )
+                .unwrap() // we know length is within bounds, and that's the only error possible
             }
         }
     }
@@ -186,7 +176,7 @@ mod tests {
 
     #[test]
     fn blake2b_256() {
-        let hash = digest_256(b"hello world").unwrap();
+        let hash = digest_256(b"hello world");
         let expected =
             hex::decode("256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610")
                 .unwrap();
@@ -195,7 +185,7 @@ mod tests {
 
     #[test]
     fn blake2b_128() {
-        let hash = digest_128(b"hello world").unwrap();
+        let hash = digest_128(b"hello world");
         let expected = hex::decode("e9a804b2e527fd3601d2ffc0bb023cd6").unwrap();
         assert_eq!(expected, hash);
     }

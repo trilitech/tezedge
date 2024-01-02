@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `FromBase58CheckError::IncorrectBase58Prefix` variant.
 - Add `NomReader`, `BinWriter` support for `Ed25519Signature`.
 - Add `signature::Signature` enum representing possible types of signature used in Tezos.
+- Add `From<PublicKeyEd25519>` impl for `ContractTz1Hash`.
+- Add `From<PublicKeySecp256k1>` impl for `ContractTz2Hash`.
+- Add `From<PublicKeyP256>` impl for `ContractTz3Hash`.
+- Add `From<PublicKeyBls>` impl for `ContractTz4Hash`.
 
 ### Changed
 
@@ -19,6 +23,13 @@ parameterized by the lifetime of the input byte slice.
 - Renamed `hash::Signature` to `hash::UnknownSignature`.
 - All hash structs no longer publicly expose the underlying `Hash`. Instead, use `Into<Vec<u8>>` and `AsRef<[u8]>`.
 - `ToBase58Check` no longer returns a `Result` type.
+- `blake2b::digest_128`, `blake2b::digest_160`, `blake2b::digest_256` return
+  plain `Vec<u8>` instead of `Result<Vec<u8>, Blake2bError>`, the error was
+  never possible.
+- `blake2b::merkle_tree` returns plain `Vec<u8>` instead of `Result<Vec<u8>,
+  Blake2bError>`, the error was never possible.
+- `tezos_crypto_rs`: `PublicKeyWithHash::pk_hash` now returns `Self::Hash`
+  instead of `Result`.
 
 ### Deprecated
 
@@ -28,6 +39,11 @@ parameterized by the lifetime of the input byte slice.
 
 - Removed legacy `SecretKeyEd25519` encoding.
 - Removed `ToBase58CheckError`.
+- Removed unused `Blake2bError::Other`.
+- Removed impossible `TryFromPKError`.
+- `tezos_data_encoding`: Removed unused `DecodeErrorKind::Hash` and
+  `DecodeError::hash_error`
+- `tezos_crypto_rs`: Removed unused `Error` type from `PublicKeyWithHash`
 
 ### Fixed
 

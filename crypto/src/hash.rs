@@ -516,31 +516,28 @@ impl HashType {
 
 /// Implementation of chain_id.ml -> of_block_hash
 #[inline]
-pub fn chain_id_from_block_hash(block_hash: &BlockHash) -> Result<ChainId, Blake2bError> {
-    let result = crate::blake2b::digest_256(&block_hash.0)?;
-    Ok(ChainId::from_bytes(&result[0..HashType::ChainId.size()])
-        .unwrap_or_else(|_| unreachable!("ChainId is created from slice of correct size")))
-}
-
-#[cfg_attr(feature = "fuzzing", derive(fuzzcheck::DefaultMutator))]
-#[derive(Debug, Error)]
-pub enum TryFromPKError {
-    #[error("Error calculating digest")]
-    Digest(#[from] Blake2bError),
-    #[error("Invalid hash size")]
-    Size(#[from] FromBytesError),
+pub fn chain_id_from_block_hash(block_hash: &BlockHash) -> ChainId {
+    let result = crate::blake2b::digest_256(&block_hash.0);
+    ChainId::from_bytes(&result[0..HashType::ChainId.size()])
+        .unwrap_or_else(|_| unreachable!("ChainId is created from slice of correct size"))
 }
 
 macro_rules! pk_with_hash {
     ($pk:ident, $pkh:ident) => {
         impl PublicKeyWithHash for $pk {
             type Hash = $pkh;
-            type Error = TryFromPKError;
 
-            fn pk_hash(&self) -> Result<Self::Hash, Self::Error> {
-                let hash = blake2b::digest_160(&self.0)?;
-                let typed_hash = Self::Hash::from_bytes(&hash)?;
-                Ok(typed_hash)
+            fn pk_hash(&self) -> Self::Hash {
+                let hash = blake2b::digest_160(&self.0);
+                // hash size is 20 bytes (160 bits), exactly how many
+                // ContractTz*Hash expect, safe to unwrap
+                Self::Hash::from_bytes(&hash).unwrap()
+            }
+        }
+
+        impl From<$pk> for $pkh {
+            fn from(source: $pk) -> Self {
+                source.pk_hash()
             }
         }
     };
@@ -550,46 +547,6 @@ pk_with_hash!(PublicKeyEd25519, ContractTz1Hash);
 pk_with_hash!(PublicKeySecp256k1, ContractTz2Hash);
 pk_with_hash!(PublicKeyP256, ContractTz3Hash);
 pk_with_hash!(PublicKeyBls, ContractTz4Hash);
-
-impl TryFrom<PublicKeyEd25519> for ContractTz1Hash {
-    type Error = TryFromPKError;
-
-    fn try_from(source: PublicKeyEd25519) -> Result<Self, Self::Error> {
-        let hash = blake2b::digest_160(&source.0)?;
-        let typed_hash = Self::from_bytes(&hash)?;
-        Ok(typed_hash)
-    }
-}
-
-impl TryFrom<PublicKeySecp256k1> for ContractTz2Hash {
-    type Error = TryFromPKError;
-
-    fn try_from(source: PublicKeySecp256k1) -> Result<Self, Self::Error> {
-        let hash = blake2b::digest_160(&source.0)?;
-        let typed_hash = Self::from_bytes(&hash)?;
-        Ok(typed_hash)
-    }
-}
-
-impl TryFrom<PublicKeyP256> for ContractTz3Hash {
-    type Error = TryFromPKError;
-
-    fn try_from(source: PublicKeyP256) -> Result<Self, Self::Error> {
-        let hash = blake2b::digest_160(&source.0)?;
-        let typed_hash = Self::from_bytes(&hash)?;
-        Ok(typed_hash)
-    }
-}
-
-impl TryFrom<PublicKeyBls> for ContractTz4Hash {
-    type Error = TryFromPKError;
-
-    fn try_from(source: PublicKeyBls) -> Result<Self, Self::Error> {
-        let hash = blake2b::digest_160(&source.0)?;
-        let typed_hash = Self::from_bytes(&hash)?;
-        Ok(typed_hash)
-    }
-}
 
 impl TryFrom<&PublicKeyEd25519> for ed25519_dalek::VerifyingKey {
     type Error = FromBytesError;
@@ -638,7 +595,7 @@ pub enum PublicKeyError {
 impl PublicKeyEd25519 {
     /// Generates public key hash for public key ed25519
     pub fn public_key_hash(&self) -> Result<CryptoboxPublicKeyHash, PublicKeyError> {
-        CryptoboxPublicKeyHash::try_from(crate::blake2b::digest_128(self.0.as_ref())?)
+        CryptoboxPublicKeyHash::try_from(crate::blake2b::digest_128(self.0.as_ref()))
             .map_err(Into::into)
     }
 }
@@ -661,8 +618,7 @@ impl SecretKeyEd25519 {
                 actual: self.0.len(),
             })?;
 
-        let payload = crate::blake2b::digest_256(data.as_ref())
-            .map_err(|e| CryptoError::AlgorithmError(e.to_string()))?;
+        let payload = crate::blake2b::digest_256(data.as_ref());
         let signature = sk.sign(&payload);
         Ok(Signature::Ed25519(Ed25519Signature(
             signature.to_bytes().to_vec(),
@@ -685,8 +641,7 @@ impl PublicKeySignatureVerifier for PublicKeyEd25519 {
         let pk = ed25519_dalek::VerifyingKey::try_from(self)
             .map_err(|_| CryptoError::InvalidPublicKey)?;
 
-        let payload = crate::blake2b::digest_256(bytes)
-            .map_err(|e| CryptoError::AlgorithmError(e.to_string()))?;
+        let payload = crate::blake2b::digest_256(bytes);
 
         pk.verify_strict(&payload, &signature)
             .map_err(CryptoError::Ed25519)?;
@@ -783,8 +738,8 @@ impl PublicKeySignatureVerifier for PublicKeyP256 {
 }
 
 impl OperationListHash {
-    pub fn calculate(list: &[OperationHash]) -> Result<Self, Blake2bError> {
-        blake2b::merkle_tree(list).map(OperationListHash)
+    pub fn calculate(list: &[OperationHash]) -> Self {
+        OperationListHash(blake2b::merkle_tree(list))
     }
 }
 
@@ -839,14 +794,14 @@ mod tests {
     fn test_chain_id_from_block_hash() -> Result<(), anyhow::Error> {
         let decoded_chain_id: ChainId = chain_id_from_block_hash(&BlockHash::from_base58_check(
             "BLockGenesisGenesisGenesisGenesisGenesisb83baZgbyZe",
-        )?)?;
+        )?);
         let decoded_chain_id: &str = &decoded_chain_id.to_base58_check();
         let expected_chain_id = "NetXgtSLGNJvNye";
         assert_eq!(expected_chain_id, decoded_chain_id);
 
         let decoded_chain_id: ChainId = chain_id_from_block_hash(&BlockHash::from_base58_check(
             "BLockGenesisGenesisGenesisGenesisGenesisd6f5afWyME7",
-        )?)?;
+        )?);
         let decoded_chain_id: &str = &decoded_chain_id.to_base58_check();
         let expected_chain_id = "NetXjD3HPJJjmcd";
         assert_eq!(expected_chain_id, decoded_chain_id);
@@ -1359,8 +1314,7 @@ mod tests {
             OperationHash::from_base58_check(operation_0).unwrap(),
             OperationHash::from_base58_check(operation_1).unwrap(),
             OperationHash::from_base58_check(operation_2).unwrap(),
-        ])
-        .unwrap();
+        ]);
 
         let predecessor = "BLc1ntjBDjsszZkGrbyHMoQ6gByJzkEjMs94T7UaM1ogGXa1PzF";
         let payload_hash = BlockPayloadHash::calculate(
