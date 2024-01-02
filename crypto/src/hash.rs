@@ -526,20 +526,18 @@ macro_rules! pk_with_hash {
     ($pk:ident, $pkh:ident) => {
         impl PublicKeyWithHash for $pk {
             type Hash = $pkh;
-            type Error = ::std::convert::Infallible;
 
-            fn pk_hash(&self) -> Result<Self::Hash, Self::Error> {
+            fn pk_hash(&self) -> Self::Hash {
                 let hash = blake2b::digest_160(&self.0);
                 // hash size is 20 bytes (160 bits), exactly how many
                 // ContractTz*Hash expect, safe to unwrap
-                let typed_hash = Self::Hash::from_bytes(&hash).unwrap();
-                Ok(typed_hash)
+                Self::Hash::from_bytes(&hash).unwrap()
             }
         }
 
         impl From<$pk> for $pkh {
             fn from(source: $pk) -> Self {
-                source.pk_hash().unwrap()
+                source.pk_hash()
             }
         }
     };

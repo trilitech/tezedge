@@ -177,9 +177,7 @@ pub fn keypair_with_hash_from_ikm(
 ) -> Result<(SecretKeyBls, PublicKeyBls, ContractTz4Hash), CryptoError> {
     let (sk, pk) = keypair_from_ikm(ikm)?;
 
-    let hash = pk
-        .pk_hash()
-        .map_err(|e| CryptoError::AlgorithmError(format!("BLS_PK_HASH: {:?}", e)))?;
+    let hash = pk.pk_hash();
 
     Ok((sk, pk, hash))
 }
@@ -447,7 +445,7 @@ mod tests {
                 .expect("pk_bytes should be 48 bytes long");
             let pk = PublicKeyBls(pk_bytes.to_vec());
 
-            let tz4 = pk.pk_hash().expect("PublicKey hashable");
+            let tz4 = pk.pk_hash();
 
             let expected_tz4 = ContractTz4Hash::from_b58check(tz4_b58).expect("Valid tz4 b58");
 

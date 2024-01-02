@@ -28,6 +28,8 @@ parameterized by the lifetime of the input byte slice.
   never possible.
 - `blake2b::merkle_tree` returns plain `Vec<u8>` instead of `Result<Vec<u8>,
   Blake2bError>`, the error was never possible.
+- `tezos_crypto_rs`: `PublicKeyWithHash::pk_hash` now returns `Self::Hash`
+  instead of `Result`.
 
 ### Deprecated
 
@@ -41,6 +43,7 @@ parameterized by the lifetime of the input byte slice.
 - Removed impossible `TryFromPKError`.
 - `tezos_data_encoding`: Removed unused `DecodeErrorKind::Hash` and
   `DecodeError::hash_error`
+- `tezos_crypto_rs`: Removed unused `Error` type from `PublicKeyWithHash`
 
 ### Fixed
 
