@@ -39,6 +39,8 @@ parameterized by the lifetime of the input byte slice.
 - Removed `ToBase58CheckError`.
 - Removed unused `Blake2bError::Other`.
 - Removed impossible `TryFromPKError`.
+- `tezos_data_encoding`: Removed unused `DecodeErrorKind::Hash` and
+  `DecodeError::hash_error`
 
 ### Fixed
 
