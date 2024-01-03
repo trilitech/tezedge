@@ -52,6 +52,7 @@ parameterized by the lifetime of the input byte slice.
 - Hash input before signing with `SecretKeyEd25519`, to match octez impl.
 - Fix `BlsSignature` base58 check encoding/decoding.
 - Fix `SecretKeyEd25519` base58 check encoding/decoding.
+- Fix all zeros signature encoding: should be `Unknown` rather than defaulting to `Ed25519`.
 
 ### Security
 
