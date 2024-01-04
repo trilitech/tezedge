@@ -7,6 +7,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Nothing.
+
+### Changed
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+### Security
+
+- Nothing.
+
+### Performance
+
+- Nothing.
+
+## [0.6.0] - 2024-01-05
+
+### Added
+
 - Add `FromBase58CheckError::IncorrectBase58Prefix` variant.
 - Add `NomReader`, `BinWriter` support for `Ed25519Signature`.
 - Add `signature::Signature` enum representing possible types of signature used in Tezos.
