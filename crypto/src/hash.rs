@@ -1,5 +1,5 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
-// SPDX-CopyrightText: 2022-2023 TriliTech <contact@trili.tech>
+// SPDX-CopyrightText: 2022-2024 Trilitech <contact@trili.tech>
 // SPDX-License-Identifier: MIT
 
 use std::convert::{TryFrom, TryInto};
@@ -7,7 +7,6 @@ use std::convert::{TryFrom, TryInto};
 use crate::{
     base58::{FromBase58Check, FromBase58CheckError, ToBase58Check},
     blake2b::{self, Blake2bError},
-    signature::Signature,
     CryptoError, PublicKeySignatureVerifier, PublicKeyWithHash,
 };
 use serde::{Deserialize, Serialize};
@@ -320,6 +319,25 @@ define_hash!(NonceHash);
 define_hash!(OperationListHash);
 define_hash!(SmartRollupHash);
 
+macro_rules! unknown_sig {
+    ($sig:ident) => {
+        impl From<$sig> for UnknownSignature {
+            fn from($sig(s): $sig) -> Self {
+                UnknownSignature(s)
+            }
+        }
+
+        impl From<UnknownSignature> for $sig {
+            fn from(UnknownSignature(s): UnknownSignature) -> $sig {
+                $sig(s)
+            }
+        }
+    };
+}
+unknown_sig!(Ed25519Signature);
+unknown_sig!(Secp256k1Signature);
+unknown_sig!(P256Signature);
+
 /// Note: see Tezos ocaml lib_crypto/base58.ml
 #[derive(Debug, Copy, Clone, PartialEq, strum_macros::AsRefStr)]
 pub enum HashType {
@@ -583,7 +601,7 @@ impl PublicKeyEd25519 {
 }
 
 impl SecretKeyEd25519 {
-    pub fn sign<I>(&self, data: I) -> Result<Signature, CryptoError>
+    pub fn sign<I>(&self, data: I) -> Result<Ed25519Signature, CryptoError>
     where
         I: AsRef<[u8]>,
     {
@@ -602,18 +620,20 @@ impl SecretKeyEd25519 {
 
         let payload = crate::blake2b::digest_256(data.as_ref());
         let signature = sk.sign(&payload);
-        Ok(Signature::Ed25519(Ed25519Signature(
-            signature.to_bytes().to_vec(),
-        )))
+        Ok(Ed25519Signature(signature.to_bytes().to_vec()))
     }
 }
 
 impl PublicKeySignatureVerifier for PublicKeyEd25519 {
-    type Signature = Signature;
+    type Signature = Ed25519Signature;
     type Error = CryptoError;
 
     /// Verifies the correctness of `bytes` signed by Ed25519 as the `signature`.
-    fn verify_signature(&self, signature: &Signature, bytes: &[u8]) -> Result<bool, Self::Error> {
+    fn verify_signature(
+        &self,
+        signature: &Self::Signature,
+        bytes: &[u8],
+    ) -> Result<bool, Self::Error> {
         let signature = signature
             .as_ref()
             .try_into()
@@ -633,11 +653,15 @@ impl PublicKeySignatureVerifier for PublicKeyEd25519 {
 }
 
 impl PublicKeySignatureVerifier for PublicKeySecp256k1 {
-    type Signature = Signature;
+    type Signature = Secp256k1Signature;
     type Error = CryptoError;
 
     /// Verifies the correctness of `bytes` signed by Secp256k1 as the `signature`.
-    fn verify_signature(&self, signature: &Signature, bytes: &[u8]) -> Result<bool, Self::Error> {
+    fn verify_signature(
+        &self,
+        signature: &Self::Signature,
+        bytes: &[u8],
+    ) -> Result<bool, Self::Error> {
         let pk = libsecp256k1::PublicKey::parse_slice(
             &self.0,
             Some(libsecp256k1::PublicKeyFormat::Compressed),
@@ -653,11 +677,15 @@ impl PublicKeySignatureVerifier for PublicKeySecp256k1 {
 }
 
 impl PublicKeySignatureVerifier for PublicKeyP256 {
-    type Signature = Signature;
+    type Signature = P256Signature;
     type Error = CryptoError;
 
     /// Verifies the correctness of `bytes` signed by P256 as the `signature`.
-    fn verify_signature(&self, signature: &Signature, bytes: &[u8]) -> Result<bool, Self::Error> {
+    fn verify_signature(
+        &self,
+        signature: &Self::Signature,
+        bytes: &[u8],
+    ) -> Result<bool, Self::Error> {
         use p256::{
             ecdsa::signature::{
                 digest::{FixedOutput, Reset, Update},
@@ -719,6 +747,21 @@ impl PublicKeySignatureVerifier for PublicKeyP256 {
     }
 }
 
+#[cfg(feature = "bls")]
+impl PublicKeySignatureVerifier for PublicKeyBls {
+    type Signature = BlsSignature;
+    type Error = CryptoError;
+
+    /// Verifies the correctness of `bytes` signed by Ed25519 as the `signature`.
+    fn verify_signature(
+        &self,
+        signature: &Self::Signature,
+        bytes: &[u8],
+    ) -> Result<bool, Self::Error> {
+        signature.aggregate_verify(&mut ([(bytes, self)].into_iter()))
+    }
+}
+
 impl OperationListHash {
     pub fn calculate(list: &[OperationHash]) -> Self {
         OperationListHash(blake2b::merkle_tree(list))
@@ -744,6 +787,7 @@ impl BlockPayloadHash {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::signature::Signature;
 
     #[test]
     fn test_encode_chain_id() -> Result<(), anyhow::Error> {
@@ -1053,7 +1097,7 @@ mod tests {
         .unwrap();
         let sig = Signature::from_base58_check(
             "sigsZwFnCnHBdmBcD763TUFZL5wCLXBDmAwPMyGY5edWe1B8XQQBv4X83RHkkrScVkAEKmU3CYg3cLH8Gja24LfDRyR23raX"
-        ).unwrap();
+        ).unwrap().try_into().unwrap();
         let msg = hex::decode("b718d2420ad9498466bbfddf864f02f8a9a526a8585cf2e38ffac60e7a86f022cb0242acd44d3628255bf4b90d0737911193bf2e98064b9b237017d9b0b5fb53af478196f6bc99e43e7009e6")
             .unwrap();
 
@@ -1082,7 +1126,7 @@ mod tests {
             "sppk7cwkTzCPptCSxSTvGNg4uqVcuTbyWooLnJp4yxJNH5DReUGxYvs",
         )
         .unwrap();
-        let sig = Signature::from_base58_check("sigrJ2jqanLupARzKGvzWgL1Lv6NGUqDovHKQg9MX4PtNtHXgcvG6131MRVzujJEXfvgbuRtfdGbXTFaYJJjuUVLNNZTf5q1").unwrap();
+        let sig = Signature::from_base58_check("sigrJ2jqanLupARzKGvzWgL1Lv6NGUqDovHKQg9MX4PtNtHXgcvG6131MRVzujJEXfvgbuRtfdGbXTFaYJJjuUVLNNZTf5q1").unwrap().try_into().unwrap();
         let msg = hex::decode("5538e2cc90c9b053a12e2d2f3a985aff1809eac59501db4d644e4bb381b06b4b")
             .unwrap();
 
@@ -1098,7 +1142,7 @@ mod tests {
         .unwrap();
         let sig = Signature::from_base58_check(
             "sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"
-        ).unwrap();
+        ).unwrap().try_into().unwrap();
         let msg = hex::decode("5538e2cc90c9b053a12e2d2f3a985aff1809eac59501db4d644e4bb381b06b4b")
             .unwrap();
 

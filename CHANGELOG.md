@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `From<PublicKeySecp256k1>` impl for `ContractTz2Hash`.
 - Add `From<PublicKeyP256>` impl for `ContractTz3Hash`.
 - Add `From<PublicKeyBls>` impl for `ContractTz4Hash`.
+- Add `TryFrom<Signature>` impl for various signature types.
+- Add `PublicKeySignatureVerifier` impl for `PublicKeyBls`.
 
 ### Changed
 
@@ -30,6 +32,7 @@ parameterized by the lifetime of the input byte slice.
   Blake2bError>`, the error was never possible.
 - `tezos_crypto_rs`: `PublicKeyWithHash::pk_hash` now returns `Self::Hash`
   instead of `Result`.
+- `PublicKeySignatureVerifier` now requires the explicitly correct signature kind for the given public key.
 
 ### Deprecated
 
