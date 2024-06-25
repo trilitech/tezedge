@@ -1,5 +1,6 @@
 // Copyright (c) SimpleStaking, Viable Systems, Nomadic Labs and Tezedge Contributors
-// SPDX-CopyrightText: 2022-2023 TriliTech <contact@trili.tech>
+// SPDX-CopyrightText: 2022-2024 TriliTech <contact@trili.tech>
+//
 // SPDX-License-Identifier: MIT
 
 use bitvec::slice::BitSlice;
@@ -506,7 +507,7 @@ where
     move |input| parser(input).map_err(|e| e.map(|e| e.add_field(name)))
 }
 
-/// Applies the `parser` to the input, addin enum variant context to the error.
+/// Applies the `parser` to the input, addin num variant context to the error.
 #[inline(always)]
 pub fn variant<'a, O, F>(
     name: &'static str,
@@ -564,17 +565,6 @@ pub fn n_bignum(mut input: NomInput) -> NomResult<BigUint> {
         bitvec.extend_from_bitslice(bitslice);
     }
     Ok((input, BigUint::from_bytes_be(&bitvec.into_vec())))
-}
-
-pub fn hashed<'a, O, F>(mut parser: F) -> impl FnMut(NomInput<'a>) -> NomResult<'a, (O, Vec<u8>)>
-where
-    F: FnMut(NomInput<'a>) -> NomResult<'a, O>,
-{
-    move |input| {
-        let (rest, result) = parser(input)?;
-        let hash = crypto::blake2b::digest_256(&input[..input.len() - rest.len()]);
-        Ok((rest, (result, hash)))
-    }
 }
 
 #[cfg(test)]
