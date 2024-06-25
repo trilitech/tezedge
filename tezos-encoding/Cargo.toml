@@ -14,7 +14,7 @@ repository = "https://github.com/trilitech/tezedge.git"
 bit-vec = "0.6.2"
 thiserror = "1.0"
 hex = "0.4"
-num-bigint = "0.3"
+num-bigint = { version = "0.4", default-features = false }
 num-traits = "0.2.8"
 serde = { version = "1.0", features = ["derive"] }
 nom = "7.1"
