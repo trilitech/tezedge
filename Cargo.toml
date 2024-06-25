@@ -8,6 +8,24 @@ members = [
     "tezos-encoding-derive",
 ]
 
+[workspace.dependencies.tezos_data_encoding]
+version = "0.5.2"
+path = "./tezos-encoding"
+default-features = false
+
+[workspace.dependencies.tezos_data_encoding_derive]
+version = "0.5.2"
+path = "./tezos-encoding-derive"
+default-features = false
+
+[workspace.dependencies.tezos_crypto_rs]
+version = "0.5.2"
+path = "./crypto"
+default-features = false
+
+[workspace.dependencies.nom]
+version = "7.1"
+
 [profile.fuzz]
 inherits = "release"
 opt-level = 3

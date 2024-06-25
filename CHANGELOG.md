@@ -36,6 +36,7 @@ parameterized by the lifetime of the input byte slice.
 - Update `blst` dependency to `0.3.12` to improve RISC-V compatibility.
 - Update `num-bigint` dependency to `0.4` to improve WASM compatibility.
 - Minimum supported rust version bumped to `1.64`.
+- `tezos_crypto_rs` now depends on `tezos_data_encoding`, rather than vice-versa.
 
 ### Deprecated
 
