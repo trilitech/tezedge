@@ -49,8 +49,6 @@
 //! # assert_eq!(outer, result);
 //! ```
 
-extern crate tezos_crypto_rs as crypto;
-
 mod bit_utils;
 pub mod types;
 

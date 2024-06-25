@@ -17,14 +17,9 @@ hex = "0.4"
 num-bigint = { version = "0.4", default-features = false }
 num-traits = "0.2.8"
 serde = { version = "1.0", features = ["derive"] }
-nom = "7.1"
+nom.workspace = true
 bitvec = "1.0"
 lazy_static = "1.4"
-
-[dependencies.tezos_crypto_rs]
-path = "../crypto"
-version = "0.5.2"
-default-features = false
 
 [dependencies.tezos_data_encoding_derive]
 path = "../tezos-encoding-derive"

@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use zeroize::Zeroize;
 
+mod encoding;
+
 const CRYPTO_KEY_SIZE: usize = 32;
 
 mod prefix_bytes {
@@ -339,7 +341,7 @@ unknown_sig!(Secp256k1Signature);
 unknown_sig!(P256Signature);
 
 /// Note: see Tezos ocaml lib_crypto/base58.ml
-#[derive(Debug, Copy, Clone, PartialEq, strum_macros::AsRefStr)]
+#[derive(Debug, Copy, Clone, PartialEq, strum_macros::AsRefStr, strum_macros::IntoStaticStr)]
 pub enum HashType {
     // "\087\082\000" (* Net(15) *)
     ChainId,
