@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `From<PublicKeyBls>` impl for `ContractTz4Hash`.
 - Add `TryFrom<Signature>` impl for various signature types.
 - Add `PublicKeySignatureVerifier` impl for `PublicKeyBls`.
+- Add `PublicKey`, `PublicKeyHash` aggregate types.
 
 ### Changed
 
