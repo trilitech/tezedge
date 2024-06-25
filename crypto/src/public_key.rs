@@ -102,6 +102,18 @@ impl PublicKeySignatureVerifier for PublicKey {
     }
 }
 
+impl crate::PublicKeyWithHash for PublicKey {
+    type Hash = crate::public_key_hash::PublicKeyHash;
+
+    fn pk_hash(&self) -> Self::Hash {
+        match self {
+            Self::Ed25519(pk) => Self::Hash::Ed25519(pk.pk_hash()),
+            Self::Secp256k1(pk) => Self::Hash::Secp256k1(pk.pk_hash()),
+            Self::P256(pk) => Self::Hash::P256(pk.pk_hash()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
