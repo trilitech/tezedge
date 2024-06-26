@@ -145,65 +145,65 @@ mod test {
         assert_eq!(tz3, &tz3_from_pk);
     }
 
-    // #[test]
-    // fn tz1_encoding() {
-    //     let tz1 = "edpkuDMUm7Y53wp4gxeLBXuiAhXZrLn8XB1R83ksvvesH8Lp8bmCfK";
+    #[test]
+    fn tz1_encoding() {
+        let tz1 = "edpkuDMUm7Y53wp4gxeLBXuiAhXZrLn8XB1R83ksvvesH8Lp8bmCfK";
 
-    //     let public_key = PublicKey::from_b58check(tz1).expect("expected valid tz1 hash");
+        let public_key = PublicKey::from_b58check(tz1).expect("expected valid tz1 hash");
 
-    //     let mut bin = Vec::new();
-    //     public_key
-    //         .bin_write(&mut bin)
-    //         .expect("serialization should work");
+        let mut bin = Vec::new();
+        public_key
+            .bin_write(&mut bin)
+            .expect("serialization should work");
 
-    //     let deserde_pk = NomReader::nom_read(bin.as_slice())
-    //         .expect("deserialization should work")
-    //         .1;
+        let deserde_pk = NomReader::nom_read(bin.as_slice())
+            .expect("deserialization should work")
+            .1;
 
-    //     // Check tag encoding
-    //     assert_eq!(0_u8, bin[0]);
-    //     assert_eq!(public_key, deserde_pk);
-    // }
+        // Check tag encoding
+        assert_eq!(0_u8, bin[0]);
+        assert_eq!(public_key, deserde_pk);
+    }
 
-    // #[test]
-    // fn tz2_encoding() {
-    //     let tz2 = "sppk7Zik17H7AxECMggqD1FyXUQdrGRFtz9X7aR8W2BhaJoWwSnPEGA";
+    #[test]
+    fn tz2_encoding() {
+        let tz2 = "sppk7Zik17H7AxECMggqD1FyXUQdrGRFtz9X7aR8W2BhaJoWwSnPEGA";
 
-    //     let public_key = PublicKey::from_b58check(tz2).expect("expected valid tz2 hash");
+        let public_key = PublicKey::from_b58check(tz2).expect("expected valid tz2 hash");
 
-    //     let mut bin = Vec::new();
-    //     public_key
-    //         .bin_write(&mut bin)
-    //         .expect("serialization should work");
+        let mut bin = Vec::new();
+        public_key
+            .bin_write(&mut bin)
+            .expect("serialization should work");
 
-    //     let deserde_pk = NomReader::nom_read(bin.as_slice())
-    //         .expect("deserialization should work")
-    //         .1;
+        let deserde_pk = NomReader::nom_read(bin.as_slice())
+            .expect("deserialization should work")
+            .1;
 
-    //     // Check tag encoding
-    //     assert_eq!(1_u8, bin[0]);
-    //     assert_eq!(public_key, deserde_pk);
-    // }
+        // Check tag encoding
+        assert_eq!(1_u8, bin[0]);
+        assert_eq!(public_key, deserde_pk);
+    }
 
-    // #[test]
-    // fn tz3_encoding() {
-    //     let tz3 = "p2pk67VpBjWwoPULwXCpayec6rFxaAKv8VjJ8cVMHmLDCYARu31zx5Z";
+    #[test]
+    fn tz3_encoding() {
+        let tz3 = "p2pk67VpBjWwoPULwXCpayec6rFxaAKv8VjJ8cVMHmLDCYARu31zx5Z";
 
-    //     let public_key = PublicKey::from_b58check(tz3).expect("expected valid tz3 hash");
+        let public_key = PublicKey::from_b58check(tz3).expect("expected valid tz3 hash");
 
-    //     let mut bin = Vec::new();
-    //     public_key
-    //         .bin_write(&mut bin)
-    //         .expect("serialization should work");
+        let mut bin = Vec::new();
+        public_key
+            .bin_write(&mut bin)
+            .expect("serialization should work");
 
-    //     let deserde_pk = NomReader::nom_read(bin.as_slice())
-    //         .expect("deserialization should work")
-    //         .1;
+        let deserde_pk = NomReader::nom_read(bin.as_slice())
+            .expect("deserialization should work")
+            .1;
 
-    //     // Check tag encoding
-    //     assert_eq!(2_u8, bin[0]);
-    //     assert_eq!(public_key, deserde_pk);
-    // }
+        // Check tag encoding
+        assert_eq!(2_u8, bin[0]);
+        assert_eq!(public_key, deserde_pk);
+    }
 
     #[test]
     fn tz1_signature_signature_verification_succeeds() {
@@ -265,16 +265,15 @@ mod test {
 
     #[test]
     fn tz3_signature_signature_verification_succeeds() {
+        // sk: p2sk2bixvFTFTuw9HtD4ucuDsktZTcwRJ5V3gDsQauwE2VTuh6hBiP
         let tz3 =
-            PublicKey::from_b58check("p2pk67Cwb5Ke6oSmqeUbJxURXMe3coVnH9tqPiB2xD84CYhHbBKs4oM")
+            PublicKey::from_b58check("p2pk65p7HKSGvkMdeK5yckM2nmi59oGNw4ksqdcvwxxF3AV3hopkfGS")
                 .expect("decoding public key should work");
         let sig = Signature::from_base58_check(
-            "sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"
+            "sigfMaQ3pkpywf3q5ZqfNzJuKd6apUa1gRpoGb4hK25dBuiTY5u2vVCJcPGdpUqDT1RwfeGy6gvnHuhbTgfKhn2EZVYMatnN"
         ).expect("signature decoding should work");
-        let msg = hex::decode("5538e2cc90c9b053a12e2d2f3a985aff1809eac59501db4d644e4bb381b06b4b")
-            .expect("payload decoding should work");
-
-        let result = tz3.verify_signature(&sig, &msg).unwrap();
+        let msg = b"hello, message";
+        let result = tz3.verify_signature(&sig, msg).unwrap();
         assert!(result);
     }
 

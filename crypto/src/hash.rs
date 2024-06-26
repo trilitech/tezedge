@@ -698,8 +698,10 @@ impl PublicKeySignatureVerifier for PublicKeyP256 {
             elliptic_curve::consts::U32,
         };
 
+        let bytes = blake2b::digest_256(bytes);
+
         // By default p256 crate uses sha256 to get a 32-bit hash from input message.
-        // Here though, the input data is already a Tezos hash of proper size.
+        // Here though, the input data is hashed using blake2b -
         // So we need to use identity digest.
         #[derive(Default, Clone)]
         struct NoHash([u8; CRYPTO_KEY_SIZE]);
@@ -1140,17 +1142,15 @@ mod tests {
 
     #[test]
     fn test_p256_signature_verification() {
-        let pk = PublicKeyP256::from_base58_check(
-            "p2pk67Cwb5Ke6oSmqeUbJxURXMe3coVnH9tqPiB2xD84CYhHbBKs4oM",
-        )
-        .unwrap();
-        let sig = Signature::from_base58_check(
-            "sigNCaj9CnmD94eZH9C7aPPqBbVCJF72fYmCFAXqEbWfqE633WNFWYQJFnDUFgRUQXR8fQ5tKSfJeTe6UAi75eTzzQf7AEc1"
-        ).unwrap().try_into().unwrap();
-        let msg = hex::decode("5538e2cc90c9b053a12e2d2f3a985aff1809eac59501db4d644e4bb381b06b4b")
-            .unwrap();
-
-        let result = pk.verify_signature(&sig, &msg).unwrap();
+        // sk: p2sk2bixvFTFTuw9HtD4ucuDsktZTcwRJ5V3gDsQauwE2VTuh6hBiP
+        let tz3 =
+            PublicKeyP256::from_b58check("p2pk65p7HKSGvkMdeK5yckM2nmi59oGNw4ksqdcvwxxF3AV3hopkfGS")
+                .expect("decoding public key should work");
+        let sig = P256Signature::from_base58_check(
+            "p2sigefoF8vJvSshWmLL6NyX6QnQUyUhq76r3F3ST6mTNqeCFzosDQyaRanoZpm14eeakZhAJ3LdGHFE4z9cPv9yTWFqWM4j9A"
+        ).expect("signature decoding should work");
+        let msg = b"hello, message";
+        let result = tz3.verify_signature(&sig, msg).unwrap();
         assert!(result);
     }
 
