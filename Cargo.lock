@@ -1000,6 +1000,7 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "libsecp256k1",
+ "nom",
  "num-bigint",
  "num-traits",
  "p256",
@@ -1009,6 +1010,7 @@ dependencies = [
  "serde_json",
  "strum",
  "strum_macros",
+ "tezos_data_encoding",
  "thiserror",
  "zeroize",
 ]
@@ -1026,7 +1028,6 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_json",
- "tezos_crypto_rs",
  "tezos_data_encoding_derive",
  "thiserror",
 ]

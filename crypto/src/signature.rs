@@ -14,7 +14,13 @@ use crate::hash::{
     BlsSignature, Ed25519Signature, FromBytesError, HashTrait, HashType, P256Signature,
     Secp256k1Signature, UnknownSignature,
 };
+use nom::Err;
 use serde::{Deserialize, Serialize};
+use tezos_data_encoding::enc::{BinResult, BinWriter};
+use tezos_data_encoding::encoding::{Encoding, HasEncoding};
+use tezos_data_encoding::nom::error::BoundedEncodingKind;
+use tezos_data_encoding::nom::error::DecodeError;
+use tezos_data_encoding::nom::{NomReader, NomResult};
 use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -197,6 +203,35 @@ impl TryFrom<Signature> for UnknownSignature {
             Signature::P256(s) => Ok(s.into()),
             Signature::Unknown(s) => Ok(s),
             s => Err(Self::Error::InvalidKind(s.hash_type())),
+        }
+    }
+}
+
+impl BinWriter for Signature {
+    fn bin_write(&self, out: &mut Vec<u8>) -> BinResult {
+        use tezos_data_encoding::enc::*;
+
+        dynamic(bytes)(self, out)
+    }
+}
+impl HasEncoding for Signature {
+    fn encoding() -> Encoding {
+        Encoding::Custom
+    }
+}
+
+impl<'a> NomReader<'a> for Signature {
+    fn nom_read(input: &'a [u8]) -> NomResult<'a, Self> {
+        use tezos_data_encoding::nom::*;
+
+        let (rest, v) = dynamic(bytes)(input)?;
+        if let Ok(v) = Self::try_from(v) {
+            Ok((rest, v))
+        } else {
+            Err(Err::Error(DecodeError::limit(
+                input,
+                BoundedEncodingKind::Signature,
+            )))
         }
     }
 }

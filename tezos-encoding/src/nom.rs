@@ -5,7 +5,6 @@
 
 use bitvec::slice::BitSlice;
 use bitvec::{bitvec, order::Msb0, view::BitView};
-use crypto::hash::HashTrait;
 use nom::{
     branch::*,
     bytes::complete::*,
@@ -94,7 +93,7 @@ pub mod error {
             }
         }
 
-        pub(crate) fn limit(input: NomInput<'a>, kind: BoundedEncodingKind) -> Self {
+        pub fn limit(input: NomInput<'a>, kind: BoundedEncodingKind) -> Self {
             Self {
                 input,
                 kind: DecodeErrorKind::Boundary(kind),
@@ -218,63 +217,6 @@ pub type NomResult<'a, T> = nom::IResult<NomInput<'a>, T, NomError<'a>>;
 /// Traits defining message decoding using `nom` primitives.
 pub trait NomReader<'a>: Sized {
     fn nom_read(input: &'a [u8]) -> NomResult<'a, Self>;
-}
-
-macro_rules! hash_nom_reader {
-    ($hash_name:ident) => {
-        impl<'a> NomReader<'a> for crypto::hash::$hash_name {
-            #[inline(always)]
-            fn nom_read(input: &[u8]) -> NomResult<Self> {
-                map(take(Self::hash_size()), |bytes| {
-                    Self::try_from_bytes(bytes).unwrap()
-                })(input)
-            }
-        }
-    };
-}
-
-hash_nom_reader!(ChainId);
-hash_nom_reader!(BlockHash);
-hash_nom_reader!(BlockMetadataHash);
-hash_nom_reader!(BlockPayloadHash);
-hash_nom_reader!(OperationHash);
-hash_nom_reader!(OperationListListHash);
-hash_nom_reader!(OperationMetadataHash);
-hash_nom_reader!(OperationMetadataListListHash);
-hash_nom_reader!(ContextHash);
-hash_nom_reader!(ProtocolHash);
-hash_nom_reader!(ContractKt1Hash);
-hash_nom_reader!(ContractTz1Hash);
-hash_nom_reader!(ContractTz2Hash);
-hash_nom_reader!(ContractTz3Hash);
-hash_nom_reader!(ContractTz4Hash);
-hash_nom_reader!(CryptoboxPublicKeyHash);
-hash_nom_reader!(PublicKeyEd25519);
-hash_nom_reader!(PublicKeySecp256k1);
-hash_nom_reader!(PublicKeyP256);
-hash_nom_reader!(PublicKeyBls);
-hash_nom_reader!(SecretKeyEd25519);
-hash_nom_reader!(SecretKeyBls);
-hash_nom_reader!(UnknownSignature);
-hash_nom_reader!(Ed25519Signature);
-hash_nom_reader!(Secp256k1Signature);
-hash_nom_reader!(P256Signature);
-hash_nom_reader!(BlsSignature);
-hash_nom_reader!(NonceHash);
-hash_nom_reader!(SmartRollupHash);
-
-impl<'a> NomReader<'a> for crypto::signature::Signature {
-    fn nom_read(input: &'a [u8]) -> NomResult<'a, Self> {
-        let (rest, v) = dynamic(bytes)(input)?;
-        if let Ok(v) = Self::try_from(v) {
-            Ok((rest, v))
-        } else {
-            Err(Err::Error(DecodeError::limit(
-                input,
-                BoundedEncodingKind::Signature,
-            )))
-        }
-    }
 }
 
 impl<'a> NomReader<'a> for Zarith {

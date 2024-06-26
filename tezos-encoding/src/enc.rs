@@ -318,53 +318,6 @@ mod integers {
 
 pub use integers::*;
 
-macro_rules! encode_hash {
-    ($hash_name:ty) => {
-        impl BinWriter for $hash_name {
-            fn bin_write(&self, out: &mut Vec<u8>) -> BinResult {
-                put_bytes(self.as_ref(), out);
-                Ok(())
-            }
-        }
-    };
-}
-
-encode_hash!(crypto::hash::ChainId);
-encode_hash!(crypto::hash::BlockHash);
-encode_hash!(crypto::hash::BlockMetadataHash);
-encode_hash!(crypto::hash::BlockPayloadHash);
-encode_hash!(crypto::hash::OperationHash);
-encode_hash!(crypto::hash::OperationListListHash);
-encode_hash!(crypto::hash::OperationMetadataHash);
-encode_hash!(crypto::hash::OperationMetadataListListHash);
-encode_hash!(crypto::hash::ContextHash);
-encode_hash!(crypto::hash::ProtocolHash);
-encode_hash!(crypto::hash::ContractKt1Hash);
-encode_hash!(crypto::hash::ContractTz1Hash);
-encode_hash!(crypto::hash::ContractTz2Hash);
-encode_hash!(crypto::hash::ContractTz3Hash);
-encode_hash!(crypto::hash::ContractTz4Hash);
-encode_hash!(crypto::hash::CryptoboxPublicKeyHash);
-encode_hash!(crypto::hash::PublicKeyEd25519);
-encode_hash!(crypto::hash::PublicKeySecp256k1);
-encode_hash!(crypto::hash::PublicKeyP256);
-encode_hash!(crypto::hash::PublicKeyBls);
-encode_hash!(crypto::hash::SecretKeyEd25519);
-encode_hash!(crypto::hash::SecretKeyBls);
-encode_hash!(crypto::hash::UnknownSignature);
-encode_hash!(crypto::hash::Ed25519Signature);
-encode_hash!(crypto::hash::Secp256k1Signature);
-encode_hash!(crypto::hash::P256Signature);
-encode_hash!(crypto::hash::BlsSignature);
-encode_hash!(crypto::hash::NonceHash);
-encode_hash!(crypto::hash::SmartRollupHash);
-
-impl BinWriter for crypto::signature::Signature {
-    fn bin_write(&self, out: &mut Vec<u8>) -> BinResult {
-        dynamic(bytes)(self, out)
-    }
-}
-
 impl BinWriter for Mutez {
     fn bin_write(&self, out: &mut Vec<u8>) -> BinResult {
         n_bignum(self.0.magnitude(), out)

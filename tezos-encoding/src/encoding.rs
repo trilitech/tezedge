@@ -4,7 +4,6 @@
 
 //! Schema used for serialization and deserialization.
 
-use crypto::hash::{HashTrait, HashType};
 use std::collections::HashMap;
 
 pub use tezos_data_encoding_derive::HasEncoding;
@@ -215,7 +214,7 @@ pub enum Encoding {
     Greedy(Box<Encoding>),
     /// Decode various types of hashes. Hash has it's own predefined length and prefix.
     /// This is controller by a hash implementation.
-    Hash(HashType),
+    Hash(&'static str),
     /// Timestamp encoding.
     /// - encoded as RFC 3339 in json
     /// - encoded as [Encoding::Int64] in binary
@@ -301,55 +300,6 @@ impl Encoding {
 /// Indicates that type has its own ser/de schema.
 pub trait HasEncoding {
     fn encoding() -> Encoding;
-}
-
-macro_rules! hash_has_encoding {
-    ($hash_name:ident, $enc_ref_name:ident) => {
-        impl HasEncoding for crypto::hash::$hash_name {
-            fn encoding() -> Encoding {
-                Encoding::Hash(crypto::hash::$hash_name::hash_type())
-            }
-        }
-    };
-}
-
-hash_has_encoding!(ChainId, CHAIN_ID);
-hash_has_encoding!(BlockHash, BLOCK_HASH);
-hash_has_encoding!(BlockMetadataHash, BLOCK_METADATA_HASH);
-hash_has_encoding!(BlockPayloadHash, BLOCK_PAYLOAD_HASH);
-hash_has_encoding!(OperationHash, OPERATION_HASH);
-hash_has_encoding!(OperationListListHash, OPERATION_LIST_LIST_HASH);
-hash_has_encoding!(OperationMetadataHash, OPERATION_METADATA_HASH);
-hash_has_encoding!(
-    OperationMetadataListListHash,
-    OPERATION_METADATA_LIST_LIST_HASH
-);
-hash_has_encoding!(ContextHash, CONTEXT_HASH);
-hash_has_encoding!(ProtocolHash, PROTOCOL_HASH);
-hash_has_encoding!(ContractKt1Hash, CONTRACT_KT1HASH);
-hash_has_encoding!(ContractTz1Hash, CONTRACT_TZ1HASH);
-hash_has_encoding!(ContractTz2Hash, CONTRACT_TZ2HASH);
-hash_has_encoding!(ContractTz3Hash, CONTRACT_TZ3HASH);
-hash_has_encoding!(ContractTz4Hash, CONTRACT_TZ4HASH);
-hash_has_encoding!(CryptoboxPublicKeyHash, CRYPTOBOX_PUBLIC_KEY_HASH);
-hash_has_encoding!(PublicKeyEd25519, PUBLIC_KEY_ED25519);
-hash_has_encoding!(PublicKeySecp256k1, PUBLIC_KEY_SECP256K1);
-hash_has_encoding!(PublicKeyP256, PUBLIC_KEY_P256);
-hash_has_encoding!(PublicKeyBls, PUBLIC_KEY_BLS);
-hash_has_encoding!(SecretKeyEd25519, SECRET_KEY_ED25519);
-hash_has_encoding!(SecretKeyBls, SECRET_KEY_BLS);
-hash_has_encoding!(UnknownSignature, UNKNOWN_SIGNATURE);
-hash_has_encoding!(Ed25519Signature, ED25519_SIGNATURE_HASH);
-hash_has_encoding!(Secp256k1Signature, SECP256K1_SIGNATURE_HASH);
-hash_has_encoding!(P256Signature, P256_SIGNATURE_HASH);
-hash_has_encoding!(BlsSignature, BLS_SIGNATURE_HASH);
-hash_has_encoding!(NonceHash, NONCE_HASH);
-hash_has_encoding!(SmartRollupHash, SMART_ROLLUP_HASH);
-
-impl HasEncoding for crypto::signature::Signature {
-    fn encoding() -> Encoding {
-        Encoding::Custom
-    }
 }
 
 /// Creates impl HasEncoding for given struct backed by lazy_static ref instance with encoding.
