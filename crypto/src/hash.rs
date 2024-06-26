@@ -673,8 +673,11 @@ impl PublicKeySignatureVerifier for PublicKeySecp256k1 {
         .map_err(|_| CryptoError::InvalidPublicKey)?;
         let sig = libsecp256k1::Signature::parse_standard_slice(signature.as_ref())
             .map_err(|_| CryptoError::InvalidSignature)?;
-        let msg =
-            libsecp256k1::Message::parse_slice(bytes).map_err(|_| CryptoError::InvalidMessage)?;
+
+        let payload = crate::blake2b::digest_256(bytes);
+
+        let msg = libsecp256k1::Message::parse_slice(&payload)
+            .map_err(|_| CryptoError::InvalidMessage)?;
 
         Ok(libsecp256k1::verify(&msg, &sig, &pk))
     }
@@ -1128,15 +1131,15 @@ mod tests {
 
     #[test]
     fn test_secp256k1_signature_verification() {
+        // sk: spsk1sheno8Jt8FoBEoamFoNBxUEpjEggNNpepTFc8cEoJBA9QjDJq
         let pk = PublicKeySecp256k1::from_base58_check(
-            "sppk7cwkTzCPptCSxSTvGNg4uqVcuTbyWooLnJp4yxJNH5DReUGxYvs",
+            "sppk7a2WEfU54QzcQZ2EMjihtcxLeRtNTVxHw4FW2e8W5kEJ8ZargSb",
         )
         .unwrap();
-        let sig = Signature::from_base58_check("sigrJ2jqanLupARzKGvzWgL1Lv6NGUqDovHKQg9MX4PtNtHXgcvG6131MRVzujJEXfvgbuRtfdGbXTFaYJJjuUVLNNZTf5q1").unwrap().try_into().unwrap();
-        let msg = hex::decode("5538e2cc90c9b053a12e2d2f3a985aff1809eac59501db4d644e4bb381b06b4b")
-            .unwrap();
+        let sig = Secp256k1Signature::from_base58_check("spsig1QLf7cczTbt4UHFGQKUrB2pS3ZTu9wdXR29zKxVPQkhBaiLez6hRcM142ms7HagQa3vuPstvMtYq44y4x4RPcrLu76ZuQ7").unwrap();
+        let msg = b"hello, test";
 
-        let result = pk.verify_signature(&sig, &msg).unwrap();
+        let result = pk.verify_signature(&sig, msg).unwrap();
         assert!(result);
     }
 

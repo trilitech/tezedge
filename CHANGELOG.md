@@ -62,6 +62,8 @@ parameterized by the lifetime of the input byte slice.
 - Fix `BlsSignature` base58 check encoding/decoding.
 - Fix `SecretKeyEd25519` base58 check encoding/decoding.
 - Fix all zeros signature encoding: should be `Unknown` rather than defaulting to `Ed25519`.
+- Fix `tz1` signature verification: input should be hashed.
+- Fix `tz2` signature verification: input should be hashed.
 - Fix `tz3` signature verification: input should be hashed.
 
 ### Security
