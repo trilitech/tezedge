@@ -35,6 +35,7 @@ parameterized by the lifetime of the input byte slice.
 - `PublicKeySignatureVerifier` now requires the explicitly correct signature kind for the given public key.
 - Update `blst` dependency to `0.3.12` to improve RISC-V compatibility.
 - Update `num-bigint` dependency to `0.4` to improve WASM compatibility.
+- Minimum supported rust version bumped to `1.64`.
 
 ### Deprecated
 
