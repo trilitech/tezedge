@@ -1,6 +1,7 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
 // SPDX-FileCopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
-// SPDX-FileCopyrightText: 2023 TriliTech <contact@trili.tech>
+// SPDX-FileCopyrightText: 2023-2024 TriliTech <contact@trili.tech>
+//
 // SPDX-License-Identifier: MIT
 
 use once_cell::sync::Lazy as SyncLazy;
@@ -127,82 +128,39 @@ fn generate_struct_one_field_nom_read(encoding: &StructEncoding) -> TokenStream 
 
 fn generate_struct_many_fields_nom_read(encoding: &StructEncoding) -> TokenStream {
     let name = encoding.name;
-    let (fields, hash) = encoding
-        .fields
-        .iter()
-        .partition::<Vec<_>, _>(|f| !matches!(f.kind, FieldKind::Hash));
-    let field1 = fields.iter().map(|field| field.name);
+    let field1 = encoding.fields.iter().map(|field| field.name);
     let field2 = field1.clone();
-    let field_name = fields
+    let field_name = encoding
+        .fields
         .iter()
         .map(|field| format!("{}::{}", name, field.name));
     let field_nom_read = encoding.fields.iter().map(generate_struct_field_nom_read);
-    if let Some(hash_field) = hash.first() {
-        let field3 = field1.clone();
-        let hash_name = hash_field.name;
-        quote_spanned! {
-            hash_field.name.span()=>
-                nom::combinator::map(
-                    tezos_data_encoding::nom::hashed(
-                        nom::sequence::tuple((
-                            #(tezos_data_encoding::nom::field(#field_name, #field_nom_read)),*
-                        ))
-                    ),
-                    |((#(#field2),*), #hash_name)| {
-                        #name { #(#field3),*, #hash_name: #hash_name.into() }
-                    })
-        }
-    } else {
-        quote_spanned! {
-            encoding.name.span()=>
-                nom::combinator::map(
-                    nom::sequence::tuple((
-                        #(tezos_data_encoding::nom::field(#field_name, #field_nom_read)),*
-                    )),
-                    |(#(#field1),*)| #name { #(#field2),* }
-                )
-        }
+    quote_spanned! {
+        encoding.name.span()=>
+            nom::combinator::map(
+                nom::sequence::tuple((
+                    #(tezos_data_encoding::nom::field(#field_name, #field_nom_read)),*
+                )),
+                |(#(#field1),*)| #name { #(#field2),* }
+            )
     }
 }
 
 fn generate_struct_multi_fields_nom_read(encoding: &StructEncoding) -> TokenStream {
     let name = encoding.name;
-    let (fields, hash) = encoding
-        .fields
-        .iter()
-        .partition::<Vec<_>, _>(|f| !matches!(f.kind, FieldKind::Hash));
-    let field1 = fields.iter().map(|field| field.name);
+    let field1 = encoding.fields.iter().map(|field| field.name);
     let field2 = field1.clone();
-    let field_name = fields
+    let field_name = encoding
+        .fields
         .iter()
         .map(|field| format!("{}::{}", name, field.name));
     let field_nom_read = encoding.fields.iter().map(generate_struct_field_nom_read);
-    if let Some(hash_field) = hash.first() {
-        let field3 = field1.clone();
-        let field4 = field1.clone();
-        let hash_name = hash_field.name;
-        quote_spanned! {
-            hash_field.name.span()=>
-                nom::combinator::map(
-                    tezos_data_encoding::nom::hashed(
-                        (|input| {
-                            #(let (input, #field1) = tezos_data_encoding::nom::field(#field_name, #field_nom_read)(input)?;)*
-                            Ok((input, (#(#field2),* )))
-                        })
-                    ),
-                    |((#(#field3),*), #hash_name)| {
-                        #name { #(#field4),*, #hash_name: #hash_name.into() }
-                    }
-                )
-        }
-    } else {
-        quote_spanned! {
-            encoding.name.span()=>
-                (|input| {
-                    #(let (input, #field1) = tezos_data_encoding::nom::field(#field_name, #field_nom_read)(input)?;)*
-                    Ok((input, #name { #(#field2),* }))
-                })
-        }
+    quote_spanned! {
+        encoding.name.span()=>
+            (|input| {
+                #(let (input, #field1) = tezos_data_encoding::nom::field(#field_name, #field_nom_read)(input)?;)*
+                Ok((input, #name { #(#field2),* }))
+            })
     }
 }
 
@@ -222,7 +180,6 @@ fn generate_struct_field_nom_read(field: &FieldEncoding) -> TokenStream {
             }
         }
         FieldKind::Skip => quote!(|input| Ok((input, Default::default()))),
-        FieldKind::Hash => unreachable!(),
     }
 }
 

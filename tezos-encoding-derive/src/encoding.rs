@@ -21,7 +21,6 @@ pub struct StructEncoding<'a> {
 #[derive(Debug)]
 pub enum FieldKind<'a> {
     Encoded(Box<EncodedField<'a>>),
-    Hash,
     Skip,
 }
 

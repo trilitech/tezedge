@@ -49,6 +49,7 @@ parameterized by the lifetime of the input byte slice.
 - `tezos_data_encoding`: Removed unused `DecodeErrorKind::Hash` and
   `DecodeError::hash_error`
 - `tezos_crypto_rs`: Removed unused `Error` type from `PublicKeyWithHash`
+- Removed support for `hash` field attribute when deriving encodings.
 
 ### Fixed
 

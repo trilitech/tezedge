@@ -1,4 +1,6 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
+// SPDX-FileCopyrightText: 2024 TriliTech <contact@trili.tech>
+//
 // SPDX-License-Identifier: MIT
 
 use std::{
@@ -42,7 +44,6 @@ pub const COMPOSITE: Symbol = Symbol("composite");
 
 /// Attribute name used to mark field/variant as ignored.
 pub const SKIP: Symbol = Symbol("skip");
-pub const HASH: Symbol = Symbol("hash");
 
 /// Attribute used to specify maximal size/lengh.
 pub const MAX: Symbol = Symbol("max");
