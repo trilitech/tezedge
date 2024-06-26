@@ -173,7 +173,7 @@ where
     T: ?Sized + BinWriter,
 {
     fn bin_write(&self, output: &mut Vec<u8>) -> BinResult {
-        (&**self).bin_write(output)
+        (**self).bin_write(output)
     }
 }
 

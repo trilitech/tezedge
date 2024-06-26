@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup Rust (regular)
         if: matrix.sanitizer != 'address'
-        uses: dtolnay/rust-toolchain@1.61.0
+        uses: dtolnay/rust-toolchain@1.64.0
         with:
           target: wasm32-unknown-unknown
       - name: Setup Rust (for sanitizer)
@@ -32,15 +32,15 @@ jobs:
       - name: Settings for cargo in Linux
         if: matrix.sanitizer == 'address'
         run: |
-            echo '[build]' >> ~/.cargo/config
-            echo 'rustflags = ["-Z", "sanitizer=address"]' >> ~/.cargo/config
-            echo 'rustdocflags = ["-Z", "sanitizer=address"]' >> ~/.cargo/config
-            echo 'target = "x86_64-unknown-linux-gnu"' >> ~/.cargo/config
+            echo '[build]' >> ~/.cargo/config.toml
+            echo 'rustflags = ["-Z", "sanitizer=address"]' >> ~/.cargo/config.toml
+            echo 'rustdocflags = ["-Z", "sanitizer=address"]' >> ~/.cargo/config.toml
+            echo 'target = "x86_64-unknown-linux-gnu"' >> ~/.cargo/config.toml
       - name: Settings for cargo in OSX
         if: runner.os == 'macOS'
         run: |
-            echo '[build]' >> ~/.cargo/config
-            echo 'rustflags = ["-C", "link-args=-Wl,-undefined,dynamic_lookup"]' >> ~/.cargo/config
+            echo '[build]' >> ~/.cargo/config.toml
+            echo 'rustflags = ["-C", "link-args=-Wl,-undefined,dynamic_lookup"]' >> ~/.cargo/config.toml
       - name: APT dependencies
         if: runner.os == 'Linux'
         run: |

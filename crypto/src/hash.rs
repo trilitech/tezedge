@@ -339,7 +339,7 @@ unknown_sig!(Secp256k1Signature);
 unknown_sig!(P256Signature);
 
 /// Note: see Tezos ocaml lib_crypto/base58.ml
-#[derive(Debug, Copy, Clone, PartialEq, strum_macros::AsRefStr)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, strum_macros::AsRefStr)]
 pub enum HashType {
     // "\087\082\000" (* Net(15) *)
     ChainId,
