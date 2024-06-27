@@ -252,14 +252,15 @@ mod test {
 
     #[test]
     fn tz2_signature_signature_verification_succeeds() {
+        // sk: spsk1sheno8Jt8FoBEoamFoNBxUEpjEggNNpepTFc8cEoJBA9QjDJq
         let tz2 =
-            PublicKey::from_b58check("sppk7cwkTzCPptCSxSTvGNg4uqVcuTbyWooLnJp4yxJNH5DReUGxYvs")
+            PublicKey::from_b58check("sppk7a2WEfU54QzcQZ2EMjihtcxLeRtNTVxHw4FW2e8W5kEJ8ZargSb")
                 .expect("public key decoding should work");
-        let sig = Signature::from_base58_check("sigrJ2jqanLupARzKGvzWgL1Lv6NGUqDovHKQg9MX4PtNtHXgcvG6131MRVzujJEXfvgbuRtfdGbXTFaYJJjuUVLNNZTf5q1").expect("signature decoding should work");
-        let msg = hex::decode("5538e2cc90c9b053a12e2d2f3a985aff1809eac59501db4d644e4bb381b06b4b")
-            .expect("payload decoding should work");
+        // todo use sig not spsig
+        let sig = Signature::from_base58_check("siggWynZ1jzFuv67FWSAvhX8948jgL5szpwT2fZAL5brmU9egqoXd3fDXCLQJ2EBcYVLBkev3HvkQ6xnFxSBjthdonajN8JX").expect("signature decoding should work");
+        let msg = b"hello, test";
 
-        let result = tz2.verify_signature(&sig, &msg).unwrap();
+        let result = tz2.verify_signature(&sig, msg).unwrap();
         assert!(result);
     }
 
