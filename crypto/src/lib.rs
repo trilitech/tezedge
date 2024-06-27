@@ -1,6 +1,7 @@
 // Copyright (c) SimpleStaking, Viable Systems and Tezedge Contributors
-// SPDX-CopyrightText: 2023 TriliTech <contact@trili.tech>
+// SPDX-CopyrightText: 2023-2024 TriliTech <contact@trili.tech>
 // SPDX-CopyrightText: 2023 Nomadic Labs <contact@nomadic-labs.com>
+//
 // SPDX-License-Identifier: MIT
 #![forbid(unsafe_code)]
 #![cfg_attr(feature = "fuzzing", feature(no_coverage))]
@@ -14,6 +15,8 @@ pub mod base58;
 pub mod bls;
 #[macro_use]
 pub mod hash;
+pub mod public_key;
+pub mod public_key_hash;
 pub mod signature;
 
 #[derive(Debug, Error)]
@@ -38,6 +41,8 @@ pub enum CryptoError {
     AlgorithmError(String),
     #[error("Ed25519 error: {0}")]
     Ed25519(ed25519_dalek::SignatureError),
+    #[error("Incorrect signature type: {0}")]
+    SignatureType(#[from] signature::TryFromSignatureError),
 }
 
 /// Public key that support hashing.
