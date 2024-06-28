@@ -7,7 +7,7 @@
 
 use crate::base58::{FromBase58Check, FromBase58CheckError};
 use crate::hash::{Hash, HashTrait, HashType};
-use crate::hash::{PublicKeyEd25519, PublicKeyP256, PublicKeySecp256k1};
+use crate::hash::{PublicKeyBls, PublicKeyEd25519, PublicKeyP256, PublicKeySecp256k1};
 use crate::signature::Signature;
 use crate::{CryptoError, PublicKeySignatureVerifier};
 use std::fmt::Display;
@@ -24,6 +24,8 @@ pub enum PublicKey {
     Secp256k1(PublicKeySecp256k1),
     /// Tz3 - public key
     P256(PublicKeyP256),
+    /// Tz4 - public key
+    Bls(PublicKeyBls),
 }
 
 impl Display for PublicKey {
@@ -32,6 +34,7 @@ impl Display for PublicKey {
             Self::Ed25519(tz1) => write!(f, "{}", tz1),
             Self::Secp256k1(tz2) => write!(f, "{}", tz2),
             Self::P256(tz3) => write!(f, "{}", tz3),
+            Self::Bls(tz4) => write!(f, "{}", tz4),
         }
     }
 }
@@ -46,6 +49,8 @@ impl PublicKey {
             PublicKey::Secp256k1(PublicKeySecp256k1::from_b58check(data)?)
         } else if bytes.starts_with(HashType::PublicKeyP256.base58check_prefix()) {
             PublicKey::P256(PublicKeyP256::from_b58check(data)?)
+        } else if bytes.starts_with(HashType::PublicKeyBls.base58check_prefix()) {
+            PublicKey::Bls(PublicKeyBls::from_b58check(data)?)
         } else {
             return Err(FromBase58CheckError::InvalidBase58);
         };
@@ -58,6 +63,7 @@ impl PublicKey {
             Self::Ed25519(tz1) => tz1.to_b58check(),
             Self::Secp256k1(tz2) => tz2.to_b58check(),
             Self::P256(tz3) => tz3.to_b58check(),
+            Self::Bls(tz4) => tz4.to_b58check(),
         }
     }
 }
@@ -68,6 +74,7 @@ impl From<PublicKey> for Hash {
             PublicKey::Ed25519(tz1) => tz1.into(),
             PublicKey::Secp256k1(tz2) => tz2.into(),
             PublicKey::P256(tz3) => tz3.into(),
+            PublicKey::Bls(tz4) => tz4.into(),
         }
     }
 }
@@ -98,6 +105,12 @@ impl PublicKeySignatureVerifier for PublicKey {
                 secp256k1.verify_signature(&signature.try_into()?, msg)
             }
             PublicKey::P256(p256) => p256.verify_signature(&signature.try_into()?, msg),
+            #[cfg(feature = "bls")]
+            PublicKey::Bls(bls) => bls.verify_signature(&signature.try_into()?, msg),
+            #[cfg(not(feature = "bls"))]
+            PublicKey::Bls(_) => Err(CryptoError::Unsupported(
+                "bls feature disabled, tz4 signature verification not supported",
+            )),
         }
     }
 }
@@ -110,6 +123,7 @@ impl crate::PublicKeyWithHash for PublicKey {
             Self::Ed25519(pk) => Self::Hash::Ed25519(pk.pk_hash()),
             Self::Secp256k1(pk) => Self::Hash::Secp256k1(pk.pk_hash()),
             Self::P256(pk) => Self::Hash::P256(pk.pk_hash()),
+            Self::Bls(pk) => Self::Hash::Bls(pk.pk_hash()),
         }
     }
 }
@@ -117,6 +131,7 @@ impl crate::PublicKeyWithHash for PublicKey {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::PublicKeyWithHash;
 
     #[test]
     fn tz1_b58check() {
@@ -155,6 +170,19 @@ mod test {
         let tz3_from_pk = public_key.unwrap().to_b58check();
 
         assert_eq!(tz3, &tz3_from_pk);
+    }
+
+    #[test]
+    fn tz4_b58check() {
+        let tz4 = "BLpk1yE462s3cPX5t2HhvGPg3HSEUgqLi9q9Knwx7mbN4VuhEsvBYFvEz5Eu9shR7vZRY1k5PCtV";
+
+        let public_key = PublicKey::from_b58check(tz4);
+
+        assert!(matches!(public_key, Ok(PublicKey::Bls(_))));
+
+        let tz4_from_pk = public_key.unwrap().to_b58check();
+
+        assert_eq!(tz4, &tz4_from_pk);
     }
 
     #[test]
@@ -214,6 +242,29 @@ mod test {
 
         // Check tag encoding
         assert_eq!(2_u8, bin[0]);
+        assert_eq!(public_key, deserde_pk);
+    }
+
+    #[test]
+    fn tz4_encoding() {
+        let tz4 = "BLpk1yE462s3cPX5t2HhvGPg3HSEUgqLi9q9Knwx7mbN4VuhEsvBYFvEz5Eu9shR7vZRY1k5PCtV";
+
+        let public_key = PublicKey::from_b58check(tz4).expect("expected valid tz4 hash");
+        let expected_bytes = hex::decode("03b46a862ef09f7f994c3d3570464dd8ab39305161e27b144ef900fc57e92c9429878b81af9678478d63f2eb36b01b2418").unwrap();
+
+        let mut bin = Vec::new();
+        public_key
+            .bin_write(&mut bin)
+            .expect("serialization should work");
+
+        assert_eq!(expected_bytes, bin, "Unexpected serialisation");
+
+        let deserde_pk = NomReader::nom_read(bin.as_slice())
+            .expect("deserialization should work")
+            .1;
+
+        // Check tag encoding
+        assert_eq!(3_u8, bin[0]);
         assert_eq!(public_key, deserde_pk);
     }
 
@@ -303,5 +354,64 @@ mod test {
 
         let result = tz3.verify_signature(&sig, &msg).unwrap();
         assert!(!result);
+    }
+
+    #[cfg_attr(feature = "bls", test)]
+    #[cfg(feature = "bls")]
+    fn tz4_signature_signature_verification_succeeds() {
+        // sk: BLsk2wHXLW6gN9sbEN2rU84mmCSNZKn9KRKrw74LwHqEaLGwL3qQ31
+        let tz4 = PublicKey::from_b58check(
+            "BLpk1yE462s3cPX5t2HhvGPg3HSEUgqLi9q9Knwx7mbN4VuhEsvBYFvEz5Eu9shR7vZRY1k5PCtV",
+        )
+        .expect("decoding public key should work");
+        let sig = Signature::from_base58_check(
+            "BLsig9WknWnGmPcJw1q9oCBr53UyjAWxxYNS5wz5HBKmCcuxCfK1Hwhs92YDFocvxUhXfUosgcTuzAEuAAjKzjy7isNhU3o2e8snmZyo9E85oRudCpM1MNtkeAAYEkSXUPLKtRYa9yFwni"
+        ).expect("signature decoding should work");
+        let msg = b"hello, bls";
+        let result = tz4.verify_signature(&sig, msg).unwrap();
+        assert!(result);
+    }
+
+    #[cfg_attr(feature = "bls", test)]
+    #[cfg(feature = "bls")]
+    fn tz4_signature_signature_verification_fails() {
+        // sk: BLsk2wHXLW6gN9sbEN2rU84mmCSNZKn9KRKrw74LwHqEaLGwL3qQ31
+        let tz4 = PublicKey::from_b58check(
+            "BLpk1yE462s3cPX5t2HhvGPg3HSEUgqLi9q9Knwx7mbN4VuhEsvBYFvEz5Eu9shR7vZRY1k5PCtV",
+        )
+        .expect("decoding public key should work");
+        let sig = Signature::from_base58_check(
+            "BLsig9WknWnGmPcJw1q9oCBr53UyjAWxxYNS5wz5HBKmCcuxCfK1Hwhs92YDFocvxUhXfUosgcTuzAEuAAjKzjy7isNhU3o2e8snmZyo9E85oRudCpM1MNtkeAAYEkSXUPLKtRYa9yFwni"
+        ).expect("signature decoding should work");
+        let msg = b"not the correct message";
+        let result = tz4.verify_signature(&sig, msg).unwrap();
+        assert!(!result);
+    }
+
+    #[test]
+    fn pk_hash() {
+        let test_hash = |pk, pkh| {
+            let pk = PublicKey::from_b58check(pk).unwrap();
+            let hash = pk.pk_hash().to_b58check();
+
+            assert_eq!(hash, pkh);
+        };
+
+        test_hash(
+            "edpkuDMUm7Y53wp4gxeLBXuiAhXZrLn8XB1R83ksvvesH8Lp8bmCfK",
+            "tz1QFD9WqLWZmmAuqnnTPPUjfauitYEWdshv",
+        );
+        test_hash(
+            "sppk7a2WEfU54QzcQZ2EMjihtcxLeRtNTVxHw4FW2e8W5kEJ8ZargSb",
+            "tz2DzfieD6mjjYYFqbGwotsW5ivfRogQE6c4",
+        );
+        test_hash(
+            "p2pk65p7HKSGvkMdeK5yckM2nmi59oGNw4ksqdcvwxxF3AV3hopkfGS",
+            "tz3SYfXSu1mJnKx37BcJvhHyRXM4gbHy8o8i",
+        );
+        test_hash(
+            "BLpk1yE462s3cPX5t2HhvGPg3HSEUgqLi9q9Knwx7mbN4VuhEsvBYFvEz5Eu9shR7vZRY1k5PCtV",
+            "tz4DWZXsrP3bdPaZ5B3M3iLVoRMAyxw9oKLH",
+        );
     }
 }

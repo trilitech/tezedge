@@ -10,7 +10,9 @@ use tezos_data_encoding::encoding::HasEncoding;
 use tezos_data_encoding::nom::NomReader;
 
 use crate::base58::{FromBase58Check, FromBase58CheckError};
-use crate::hash::{ContractTz1Hash, ContractTz2Hash, ContractTz3Hash, Hash, HashTrait, HashType};
+use crate::hash::{
+    ContractTz1Hash, ContractTz2Hash, ContractTz3Hash, ContractTz4Hash, Hash, HashTrait, HashType,
+};
 
 /// Hash of Layer1 contract ids.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, HasEncoding, BinWriter, NomReader)]
@@ -21,6 +23,8 @@ pub enum PublicKeyHash {
     Secp256k1(ContractTz2Hash),
     /// Tz3-contract
     P256(ContractTz3Hash),
+    /// Tz4-contract
+    Bls(ContractTz4Hash),
 }
 
 impl Display for PublicKeyHash {
@@ -29,6 +33,7 @@ impl Display for PublicKeyHash {
             Self::Ed25519(tz1) => write!(f, "{}", tz1),
             Self::Secp256k1(tz2) => write!(f, "{}", tz2),
             Self::P256(tz3) => write!(f, "{}", tz3),
+            Self::Bls(tz4) => write!(f, "{}", tz4),
         }
     }
 }
@@ -47,6 +52,9 @@ impl PublicKeyHash {
             _ if bytes.starts_with(HashType::ContractTz3Hash.base58check_prefix()) => {
                 Ok(PublicKeyHash::P256(ContractTz3Hash::from_b58check(data)?))
             }
+            _ if bytes.starts_with(HashType::ContractTz4Hash.base58check_prefix()) => {
+                Ok(PublicKeyHash::Bls(ContractTz4Hash::from_b58check(data)?))
+            }
             _ => Err(FromBase58CheckError::InvalidBase58),
         }
     }
@@ -57,6 +65,7 @@ impl PublicKeyHash {
             Self::Ed25519(tz1) => tz1.to_b58check(),
             Self::Secp256k1(tz2) => tz2.to_b58check(),
             Self::P256(tz3) => tz3.to_b58check(),
+            Self::Bls(tz4) => tz4.to_b58check(),
         }
     }
 }
@@ -67,6 +76,7 @@ impl From<PublicKeyHash> for Hash {
             PublicKeyHash::Ed25519(tz1) => tz1.into(),
             PublicKeyHash::Secp256k1(tz2) => tz2.into(),
             PublicKeyHash::P256(tz3) => tz3.into(),
+            PublicKeyHash::Bls(tz4) => tz4.into(),
         }
     }
 }
@@ -123,6 +133,19 @@ mod test {
     }
 
     #[test]
+    fn tz4_b58check() {
+        let tz4 = "tz4DWZXsrP3bdPaZ5B3M3iLVoRMAyxw9oKLH";
+
+        let pkh = PublicKeyHash::from_b58check(tz4);
+
+        assert!(matches!(pkh, Ok(PublicKeyHash::Bls(_))));
+
+        let tz4_from_pkh = pkh.unwrap().to_b58check();
+
+        assert_eq!(tz4, &tz4_from_pkh);
+    }
+
+    #[test]
     fn tz1_encoding() {
         let tz1 = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx";
 
@@ -173,6 +196,24 @@ mod test {
 
         // Check tag encoding
         assert_eq!(2_u8, bin[0]);
+        assert_eq!(pkh, deserde_pkh);
+    }
+
+    #[test]
+    fn tz4_encoding() {
+        let tz4 = "tz4DWZXsrP3bdPaZ5B3M3iLVoRMAyxw9oKLH";
+
+        let pkh = PublicKeyHash::from_b58check(tz4).expect("expected valid tz4 hash");
+
+        let mut bin = Vec::new();
+        pkh.bin_write(&mut bin).expect("serialization should work");
+
+        let deserde_pkh = NomReader::nom_read(bin.as_slice())
+            .expect("deserialization should work")
+            .1;
+
+        // Check tag encoding
+        assert_eq!(3_u8, bin[0]);
         assert_eq!(pkh, deserde_pkh);
     }
 }
