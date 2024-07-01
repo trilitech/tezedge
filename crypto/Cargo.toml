@@ -27,7 +27,7 @@ strum_macros = "0.20"
 zeroize = { version = "1.5" }
 ed25519-dalek = { version = "2.0.0", default-features = false }
 cryptoxide = { version = "0.4.4", default-features = false, features = ["sha2", "blake2"] }
-blst = { version = "0.3.12", optional = true }
+blst = { version = "=0.3.10", optional = true }
 
 proptest = { version = "1.1", optional = true }
 

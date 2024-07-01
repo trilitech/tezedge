@@ -34,7 +34,6 @@ parameterized by the lifetime of the input byte slice.
 - `tezos_crypto_rs`: `PublicKeyWithHash::pk_hash` now returns `Self::Hash`
   instead of `Result`.
 - `PublicKeySignatureVerifier` now requires the explicitly correct signature kind for the given public key.
-- Update `blst` dependency to `0.3.12` to improve RISC-V compatibility.
 - Update `num-bigint` dependency to `0.4` to improve WASM compatibility.
 - Minimum supported rust version bumped to `1.64`.
 - `tezos_crypto_rs` now depends on `tezos_data_encoding`, rather than vice-versa.
